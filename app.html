@@ -6,6 +6,7 @@
     <title>Creative Tagger — Dashboard</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key=""></script>
     <script>
         tailwind.config = {
             theme: {
@@ -36,6 +37,12 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .result-card { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .import-tab.tab-active { color: #4ade80; border-color: #22c55e; }
+        .import-tab:not(.tab-active) { border-color: transparent; }
+        .file-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; font-size: 13px; }
+        .file-row .name { flex: 1; color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-row .remove { color: rgba(255,255,255,0.2); cursor: pointer; }
+        .file-row .remove:hover { color: rgba(244,114,182,0.8); }
     </style>
 </head>
 <body class="bg-surface-950 text-white antialiased min-h-screen">
@@ -63,29 +70,134 @@
 
             <!-- Main Column -->
             <div>
-                <!-- Upload Zone -->
-                <div id="uploadZone" class="drop-zone border-2 border-dashed border-white/10 rounded-2xl p-12 text-center cursor-pointer hover:border-white/20 transition mb-8" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                    <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.html,.htm,.eml" onchange="handleFiles(this.files)">
-                    <div class="flex flex-col items-center gap-4">
-                        <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center">
-                            <svg class="w-7 h-7 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-white/60 font-medium">Drop files here or click to upload</p>
-                            <p class="text-white/30 text-sm mt-1">Video, image, or multiple images for carousel</p>
-                        </div>
-                    </div>
+                <!-- Brand Name (always visible) -->
+                <div class="flex items-center gap-3 mb-4">
+                    <label class="text-sm text-white/40">Brand</label>
+                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-48 bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
                 </div>
 
-                <!-- URL / HTML Input -->
-                <div class="flex gap-3 mb-8">
-                    <div class="flex-1 relative">
-                        <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                <!-- Import Tabs -->
+                <div class="mb-8">
+                    <div class="flex border-b border-white/10 mb-0">
+                        <button onclick="switchTab('local')" data-tab="local" class="import-tab tab-active px-5 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            Local Upload
+                        </button>
+                        <button onclick="switchTab('url')" data-tab="url" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            URL
+                        </button>
+                        <button onclick="switchTab('gdrive')" data-tab="gdrive" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l-3.5-6.062L8.932 2h7l-8 13.938zM15.068 2l-3.5 6.062L19.567 22h-7l8-13.938zM8.932 2h7l3.5 6.062-3.5 6.062H5.432l3.5-6.062z" opacity="0.7"/></svg>
+                            Google Drive
+                        </button>
+                        <button onclick="switchTab('dropbox')" data-tab="dropbox" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 3.75L6 9.5 0 5.75zm12 0l6 3.75-6 3.75-6-3.75zM0 13.25L6 9.5l6 3.75L6 17zm18-3.75l6 3.75-6 3.75-6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75z" opacity="0.7"/></svg>
+                            Dropbox
+                        </button>
+                        <button onclick="switchTab('airtable')" data-tab="airtable" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.5 2L2 6.5v11L11.5 22 21 17.5v-11zm0 2.08l6.93 3.47L11.5 11l-6.93-3.45zM4 8.14l7 3.5V19.5l-7-3.5zm8 11.36V11.64l7-3.5V15.5z" opacity="0.7"/></svg>
+                            Airtable
+                        </button>
                     </div>
-                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-40 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
-                    <button onclick="analyzeUrl()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-3 rounded-xl text-sm transition whitespace-nowrap">
-                        Analyze
-                    </button>
+
+                    <!-- Local Upload Tab -->
+                    <div id="tab-local" class="tab-content">
+                        <div id="uploadZone" class="drop-zone border-2 border-dashed border-white/10 rounded-b-2xl p-10 text-center cursor-pointer hover:border-white/20 transition" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                            <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.html,.htm,.eml" onchange="handleFiles(this.files)">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                </div>
+                                <p class="text-white/60 font-medium">Drop files here or click to upload</p>
+                                <p class="text-white/30 text-sm">Video, image, or multiple images for carousel</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- URL Tab -->
+                    <div id="tab-url" class="tab-content hidden">
+                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
+                            <div class="flex gap-3">
+                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                <button onclick="analyzeUrl()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
+                            </div>
+                            <p class="text-white/20 text-xs mt-3">Supports direct file URLs (video, image) and landing page URLs for screenshot analysis.</p>
+                        </div>
+                    </div>
+
+                    <!-- Google Drive Tab -->
+                    <div id="tab-gdrive" class="tab-content hidden">
+                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
+                            <div id="gdriveSetup" class="text-center py-4">
+                                <p class="text-white/50 text-sm mb-4">Connect Google Drive to browse and import creatives</p>
+                                <div class="max-w-sm mx-auto space-y-3 mb-4">
+                                    <input type="text" id="gdriveClientId" placeholder="Google OAuth Client ID" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="gdriveApiKey" placeholder="Google API Key" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                </div>
+                                <button onclick="connectGoogleDrive()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l-3.5-6.062L8.932 2h7l-8 13.938zM15.068 2l-3.5 6.062L19.567 22h-7l8-13.938zM8.932 2h7l3.5 6.062-3.5 6.062H5.432l3.5-6.062z"/></svg>
+                                    Open Google Drive Picker
+                                </button>
+                                <p class="text-white/20 text-xs mt-3">Get credentials from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline hover:text-white/40">Google Cloud Console</a>. Enable the Picker API.</p>
+                            </div>
+                            <div id="gdriveFiles" class="hidden">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm text-white/50">Selected files</span>
+                                    <button onclick="openGooglePicker()" class="text-xs text-brand-400 hover:text-brand-300 transition">Browse Drive</button>
+                                </div>
+                                <div id="gdriveFileList" class="space-y-2 mb-4"></div>
+                                <button onclick="analyzeGdriveFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropbox Tab -->
+                    <div id="tab-dropbox" class="tab-content hidden">
+                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6 text-center py-8">
+                            <p class="text-white/50 text-sm mb-4">Select files from your Dropbox</p>
+                            <button onclick="openDropboxChooser()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 3.75L6 9.5 0 5.75zm12 0l6 3.75-6 3.75-6-3.75zM0 13.25L6 9.5l6 3.75L6 17zm18-3.75l6 3.75-6 3.75-6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75z"/></svg>
+                                Choose from Dropbox
+                            </button>
+                            <div id="dropboxFiles" class="hidden mt-4">
+                                <div id="dropboxFileList" class="space-y-2 mb-4 text-left"></div>
+                                <button onclick="analyzeDropboxFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                            </div>
+                            <div id="dropboxSetup" class="hidden mt-4">
+                                <p class="text-white/20 text-xs">To enable Dropbox: add your Dropbox App Key in Settings</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Airtable Tab -->
+                    <div id="tab-airtable" class="tab-content hidden">
+                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
+                            <p class="text-white/50 text-sm mb-4">Import creatives from Airtable attachment fields</p>
+                            <div class="space-y-3 max-w-lg">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="text" id="airtableToken" placeholder="Personal access token (pat...)" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="airtableBaseId" placeholder="Base ID (app...)" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="text" id="airtableTable" placeholder="Table name" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                    <input type="text" id="airtableField" placeholder="Attachment field name" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                </div>
+                                <button onclick="fetchAirtableRecords()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Fetch Records
+                                </button>
+                            </div>
+                            <div id="airtableRecords" class="hidden mt-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm text-white/50" id="airtableRecordCount">0 records with attachments</span>
+                                    <button onclick="analyzeAirtableFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-5 py-2 rounded-lg text-sm transition">Analyze All</button>
+                                </div>
+                                <div id="airtableRecordList" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                            </div>
+                            <p class="text-white/20 text-xs mt-3">Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="underline hover:text-white/40">airtable.com/create/tokens</a>. Base ID is in your Airtable URL.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Loading State -->
@@ -634,7 +746,311 @@
         return Math.floor(diff / 86400) + 'd ago';
     }
 
+    // --- Tab Switching ---
+    function switchTab(tab) {
+        document.querySelectorAll('.import-tab').forEach(t => {
+            t.classList.remove('tab-active');
+            t.classList.add('text-white/40', 'border-transparent');
+        });
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        const btn = document.querySelector(`[data-tab="${tab}"]`);
+        btn.classList.add('tab-active');
+        btn.classList.remove('text-white/40', 'border-transparent');
+        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+    }
+
+    // --- Google Drive ---
+    let gdriveSelectedFiles = [];
+    let gdrivePickerLoaded = false;
+    let gdriveOAuthToken = null;
+
+    function connectGoogleDrive() {
+        const clientId = document.getElementById('gdriveClientId').value.trim();
+        const apiKey = document.getElementById('gdriveApiKey').value.trim();
+        if (!clientId || !apiKey) {
+            showToast('Enter both Client ID and API Key', 'error');
+            return;
+        }
+        STATE.settings.gdriveClientId = clientId;
+        STATE.settings.gdriveApiKey = apiKey;
+        localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+        loadGooglePickerApi();
+    }
+
+    function loadGooglePickerApi() {
+        if (gdrivePickerLoaded) { openGooglePicker(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://apis.google.com/js/api.js';
+        script.onload = () => {
+            gapi.load('picker', () => {
+                gdrivePickerLoaded = true;
+                authenticateGoogle();
+            });
+        };
+        document.head.appendChild(script);
+
+        const script2 = document.createElement('script');
+        script2.src = 'https://accounts.google.com/gsi/client';
+        document.head.appendChild(script2);
+    }
+
+    function authenticateGoogle() {
+        const clientId = STATE.settings.gdriveClientId;
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'https://www.googleapis.com/auth/drive.readonly',
+            callback: (response) => {
+                gdriveOAuthToken = response.access_token;
+                openGooglePicker();
+            },
+        });
+        tokenClient.requestAccessToken();
+    }
+
+    function openGooglePicker() {
+        if (!gdriveOAuthToken) { authenticateGoogle(); return; }
+        const apiKey = STATE.settings.gdriveApiKey;
+        const picker = new google.picker.PickerBuilder()
+            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+            .addView(new google.picker.DocsView()
+                .setIncludeFolders(true)
+                .setMimeTypes('image/jpeg,image/png,image/webp,video/mp4,video/quicktime'))
+            .setOAuthToken(gdriveOAuthToken)
+            .setDeveloperKey(apiKey)
+            .setCallback(handleGooglePickerResult)
+            .build();
+        picker.setVisible(true);
+    }
+
+    function handleGooglePickerResult(data) {
+        if (data.action === google.picker.Action.PICKED) {
+            gdriveSelectedFiles = data.docs.map(doc => ({
+                id: doc.id,
+                name: doc.name,
+                mimeType: doc.mimeType,
+                url: `https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`,
+            }));
+            document.getElementById('gdriveSetup').classList.add('hidden');
+            document.getElementById('gdriveFiles').classList.remove('hidden');
+            renderGdriveFiles();
+        }
+    }
+
+    function renderGdriveFiles() {
+        const list = document.getElementById('gdriveFileList');
+        list.innerHTML = gdriveSelectedFiles.map((f, i) => `
+            <div class="file-row">
+                <span class="name">${escHtml(f.name)}</span>
+                <span class="remove" onclick="gdriveSelectedFiles.splice(${i},1);renderGdriveFiles()">&#10005;</span>
+            </div>
+        `).join('');
+    }
+
+    async function analyzeGdriveFiles() {
+        if (!gdriveSelectedFiles.length) return;
+        showLoading(`Analyzing ${gdriveSelectedFiles.length} file(s) from Google Drive...`);
+        const results = [];
+        for (let i = 0; i < gdriveSelectedFiles.length; i++) {
+            document.getElementById('loadingText').textContent = `Analyzing ${i + 1} of ${gdriveSelectedFiles.length}...`;
+            const f = gdriveSelectedFiles[i];
+            try {
+                // Download from Drive then send as file
+                const resp = await fetch(f.url, { headers: { Authorization: `Bearer ${gdriveOAuthToken}` } });
+                const blob = await resp.blob();
+                const file = new File([blob], f.name, { type: f.mimeType });
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('brand_name', getBrand());
+                const data = await callApi('/analyze', formData);
+                results.push({ filename: f.name, ...data });
+            } catch (err) {
+                results.push({ filename: f.name, error: true });
+            }
+        }
+        hideLoading();
+        STATE.results = results;
+        if (results.length === 1 && !results[0].error) {
+            renderSingleResult(results[0], results[0].filename);
+        } else {
+            renderBatchResults(results);
+        }
+        results.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
+    }
+
+    // --- Dropbox ---
+    let dropboxSelectedFiles = [];
+
+    function openDropboxChooser() {
+        if (typeof Dropbox === 'undefined' || !Dropbox.choose) {
+            showToast('Dropbox SDK not loaded. Add your App Key in Settings.', 'error');
+            document.getElementById('dropboxSetup').classList.remove('hidden');
+            return;
+        }
+        Dropbox.choose({
+            success: (files) => {
+                dropboxSelectedFiles = files.map(f => ({
+                    name: f.name,
+                    url: f.link,
+                    size: f.bytes,
+                    icon: f.icon,
+                }));
+                document.getElementById('dropboxFiles').classList.remove('hidden');
+                renderDropboxFiles();
+            },
+            cancel: () => {},
+            linkType: 'direct',
+            multiselect: true,
+            extensions: ['images', 'video', '.mp4', '.mov', '.html'],
+        });
+    }
+
+    function renderDropboxFiles() {
+        const list = document.getElementById('dropboxFileList');
+        list.innerHTML = dropboxSelectedFiles.map((f, i) => `
+            <div class="file-row">
+                <span class="name">${escHtml(f.name)}</span>
+                <span class="text-white/20 text-xs">${(f.size / 1024).toFixed(0)}KB</span>
+                <span class="remove" onclick="dropboxSelectedFiles.splice(${i},1);renderDropboxFiles()">&#10005;</span>
+            </div>
+        `).join('');
+    }
+
+    async function analyzeDropboxFiles() {
+        if (!dropboxSelectedFiles.length) return;
+        showLoading(`Analyzing ${dropboxSelectedFiles.length} file(s) from Dropbox...`);
+        const results = [];
+        for (let i = 0; i < dropboxSelectedFiles.length; i++) {
+            document.getElementById('loadingText').textContent = `Analyzing ${i + 1} of ${dropboxSelectedFiles.length}...`;
+            const f = dropboxSelectedFiles[i];
+            try {
+                const formData = new FormData();
+                formData.append('file_url', f.url);
+                formData.append('brand_name', getBrand());
+                const data = await callApi('/analyze', formData);
+                results.push({ filename: f.name, ...data });
+            } catch (err) {
+                results.push({ filename: f.name, error: true });
+            }
+        }
+        hideLoading();
+        STATE.results = results;
+        if (results.length === 1 && !results[0].error) {
+            renderSingleResult(results[0], results[0].filename);
+        } else {
+            renderBatchResults(results);
+        }
+        results.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
+    }
+
+    // --- Airtable ---
+    let airtableAttachments = [];
+
+    async function fetchAirtableRecords() {
+        const token = document.getElementById('airtableToken').value.trim();
+        const baseId = document.getElementById('airtableBaseId').value.trim();
+        const table = document.getElementById('airtableTable').value.trim();
+        const field = document.getElementById('airtableField').value.trim();
+        if (!token || !baseId || !table || !field) {
+            showToast('Fill in all Airtable fields', 'error');
+            return;
+        }
+
+        // Save for convenience
+        STATE.settings.airtableToken = token;
+        STATE.settings.airtableBaseId = baseId;
+        STATE.settings.airtableTable = table;
+        STATE.settings.airtableField = field;
+        localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+
+        showToast('Fetching records...');
+
+        try {
+            const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}?pageSize=100`;
+            const resp = await fetch(url, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!resp.ok) throw new Error(`Airtable: ${resp.status}`);
+            const data = await resp.json();
+
+            airtableAttachments = [];
+            for (const record of data.records || []) {
+                const attachments = record.fields?.[field];
+                if (Array.isArray(attachments)) {
+                    for (const att of attachments) {
+                        airtableAttachments.push({
+                            recordId: record.id,
+                            name: att.filename || att.id,
+                            url: att.url,
+                            type: att.type,
+                            size: att.size,
+                        });
+                    }
+                }
+            }
+
+            if (!airtableAttachments.length) {
+                showToast(`No attachments found in "${field}" field`, 'error');
+                return;
+            }
+
+            document.getElementById('airtableRecords').classList.remove('hidden');
+            document.getElementById('airtableRecordCount').textContent = `${airtableAttachments.length} attachments found`;
+            renderAirtableRecords();
+        } catch (err) {
+            showToast('Airtable fetch failed: ' + err.message, 'error');
+        }
+    }
+
+    function renderAirtableRecords() {
+        const list = document.getElementById('airtableRecordList');
+        list.innerHTML = airtableAttachments.map(f => `
+            <div class="file-row">
+                <span class="name">${escHtml(f.name)}</span>
+                <span class="text-white/20 text-xs">${f.type || ''}</span>
+                <span class="text-white/20 text-xs">${f.size ? (f.size / 1024).toFixed(0) + 'KB' : ''}</span>
+            </div>
+        `).join('');
+    }
+
+    async function analyzeAirtableFiles() {
+        if (!airtableAttachments.length) return;
+        showLoading(`Analyzing ${airtableAttachments.length} file(s) from Airtable...`);
+        const results = [];
+        for (let i = 0; i < airtableAttachments.length; i++) {
+            document.getElementById('loadingText').textContent = `Analyzing ${i + 1} of ${airtableAttachments.length}...`;
+            const f = airtableAttachments[i];
+            try {
+                const formData = new FormData();
+                formData.append('file_url', f.url);
+                formData.append('brand_name', getBrand());
+                const data = await callApi('/analyze', formData);
+                results.push({ filename: f.name, ...data });
+            } catch (err) {
+                results.push({ filename: f.name, error: true });
+            }
+        }
+        hideLoading();
+        STATE.results = results;
+        if (results.length === 1 && !results[0].error) {
+            renderSingleResult(results[0], results[0].filename);
+        } else {
+            renderBatchResults(results);
+        }
+        results.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
+    }
+
+    // --- Restore saved integration credentials ---
+    function restoreIntegrationSettings() {
+        if (STATE.settings.gdriveClientId) document.getElementById('gdriveClientId').value = STATE.settings.gdriveClientId;
+        if (STATE.settings.gdriveApiKey) document.getElementById('gdriveApiKey').value = STATE.settings.gdriveApiKey;
+        if (STATE.settings.airtableToken) document.getElementById('airtableToken').value = STATE.settings.airtableToken;
+        if (STATE.settings.airtableBaseId) document.getElementById('airtableBaseId').value = STATE.settings.airtableBaseId;
+        if (STATE.settings.airtableTable) document.getElementById('airtableTable').value = STATE.settings.airtableTable;
+        if (STATE.settings.airtableField) document.getElementById('airtableField').value = STATE.settings.airtableField;
+    }
+
     init();
+    restoreIntegrationSettings();
     </script>
 </body>
 </html>
