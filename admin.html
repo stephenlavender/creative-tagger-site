@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Tagger — Admin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0D0D0D', parchment: '#F8F6F1', cream: '#F0EBE3',
+                        dune: '#B8A98A', 'dune-light': '#D6CBBA', deep: '#1A1714',
+                        charcoal: '#2C2C2C', ash: '#6B6560', stone: '#BFBAB3', rule: '#D6D1CA',
+                    },
+                    fontFamily: {
+                        display: ['Instrument Serif', 'Georgia', 'serif'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+        .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B8A98A; }
+        .stat-card { background: #F0EBE3; border: 1px solid #D6D1CA; border-radius: 8px; padding: 20px; }
+        .stat-value { font-family: 'Instrument Serif', serif; font-size: 36px; font-weight: 400; color: #0D0D0D; }
+        .stat-label { font-size: 12px; color: #6B6560; margin-top: 4px; }
+    </style>
+</head>
+<body class="bg-parchment text-obsidian antialiased font-sans min-h-screen">
+
+    <header class="border-b border-rule">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-xl">Creative Tagger</span>
+                <span class="eyebrow">Admin</span>
+            </div>
+            <a href="index.html" class="text-sm text-ash hover:text-obsidian transition">Back to site</a>
+        </div>
+    </header>
+
+    <!-- Token Input -->
+    <div id="tokenGate" class="max-w-md mx-auto mt-20 text-center">
+        <h2 class="font-display text-2xl mb-4">Admin Dashboard</h2>
+        <div class="flex gap-2">
+            <input type="password" id="adminToken" placeholder="Admin token" class="flex-1 bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+            <button onclick="loadDashboard()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-5 py-2.5 rounded-lg text-sm transition">Enter</button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden max-w-6xl mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card">
+                <div class="stat-value" id="statUsers">-</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAnalyses">-</div>
+                <div class="stat-label">Total Analyses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statRevenue">-</div>
+                <div class="stat-label">Revenue (this month)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statActive">-</div>
+                <div class="stat-label">Active Users (7d)</div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statSignupsToday">-</div>
+                <div class="stat-label">Signups Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statSignupsWeek">-</div>
+                <div class="stat-label">Signups (7d)</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statAnalysesToday">-</div>
+                <div class="stat-label">Analyses Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statActive30">-</div>
+                <div class="stat-label">Active Users (30d)</div>
+            </div>
+        </div>
+
+        <!-- By Format -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-cream border border-rule rounded-lg p-5">
+                <div class="eyebrow mb-3">Analyses by Format</div>
+                <div id="formatBreakdown" class="space-y-2"></div>
+            </div>
+            <div class="bg-cream border border-rule rounded-lg p-5">
+                <div class="eyebrow mb-3">Users by Tier</div>
+                <div id="tierBreakdown" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-cream border border-rule rounded-lg p-5 mb-8">
+            <div class="eyebrow mb-3">Recent Analyses</div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-rule text-left text-ash">
+                        <th class="pb-2 font-medium">User</th>
+                        <th class="pb-2 font-medium">Format</th>
+                        <th class="pb-2 font-medium">Cost</th>
+                        <th class="pb-2 font-medium">Time</th>
+                    </tr>
+                </thead>
+                <tbody id="recentTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-cream border border-rule rounded-lg p-5">
+            <div class="eyebrow mb-3">All Users</div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-rule text-left text-ash">
+                        <th class="pb-2 font-medium">Email</th>
+                        <th class="pb-2 font-medium">Tier</th>
+                        <th class="pb-2 font-medium">Analyses</th>
+                        <th class="pb-2 font-medium">Revenue</th>
+                        <th class="pb-2 font-medium">Last Active</th>
+                        <th class="pb-2 font-medium">Signed Up</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    const API = 'https://api.creativetagger.ai';
+    let TOKEN = '';
+
+    async function loadDashboard() {
+        TOKEN = document.getElementById('adminToken').value.trim();
+        if (!TOKEN) return;
+
+        try {
+            const [stats, users, recent] = await Promise.all([
+                fetchAdmin('/admin/stats'),
+                fetchAdmin('/admin/users?limit=100'),
+                fetchAdmin('/admin/usage/recent?limit=30'),
+            ]);
+
+            document.getElementById('tokenGate').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+
+            // Stats
+            document.getElementById('statUsers').textContent = stats.users.total;
+            document.getElementById('statAnalyses').textContent = stats.analyses.total;
+            document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
+            document.getElementById('statActive').textContent = stats.users.active_7d;
+            document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
+            document.getElementById('statSignupsWeek').textContent = stats.users.signups_7d;
+            document.getElementById('statAnalysesToday').textContent = stats.analyses.today;
+            document.getElementById('statActive30').textContent = stats.users.active_30d;
+
+            // Format breakdown
+            const fb = document.getElementById('formatBreakdown');
+            const totalAnalyses = stats.analyses.total || 1;
+            fb.innerHTML = Object.entries(stats.analyses.by_format || {}).map(([fmt, d]) => {
+                const pct = Math.round((d.count / totalAnalyses) * 100);
+                return `<div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium">${fmt}</span>
+                        <span class="text-xs text-ash">${d.count} calls</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-1.5 bg-rule rounded-full overflow-hidden"><div class="h-full bg-dune rounded-full" style="width:${pct}%"></div></div>
+                        <span class="text-xs text-ash w-8 text-right">$${(d.revenue_cents / 100).toFixed(2)}</span>
+                    </div>
+                </div>`;
+            }).join('') || '<span class="text-ash text-sm">No data yet</span>';
+
+            // Tier breakdown
+            const tb = document.getElementById('tierBreakdown');
+            tb.innerHTML = Object.entries(stats.users.by_tier || {}).map(([tier, cnt]) =>
+                `<div class="flex items-center justify-between">
+                    <span class="text-sm font-medium capitalize">${tier}</span>
+                    <span class="text-sm text-ash">${cnt} users</span>
+                </div>`
+            ).join('') || '<span class="text-ash text-sm">No data yet</span>';
+
+            // Recent
+            const rt = document.getElementById('recentTable');
+            rt.innerHTML = (recent.recent || []).map(r =>
+                `<tr class="border-b border-rule/50">
+                    <td class="py-2 text-charcoal">${esc(r.email)}</td>
+                    <td class="py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-parchment border border-rule">${r.format}</span></td>
+                    <td class="py-2 text-ash font-mono text-xs">$${(r.cost_cents / 100).toFixed(2)}</td>
+                    <td class="py-2 text-ash text-xs">${timeAgo(r.created_at)}</td>
+                </tr>`
+            ).join('') || '<tr><td colspan="4" class="py-4 text-ash text-center">No activity yet</td></tr>';
+
+            // Users
+            const ut = document.getElementById('usersTable');
+            ut.innerHTML = (users.users || []).map(u =>
+                `<tr class="border-b border-rule/50">
+                    <td class="py-2 text-charcoal">${esc(u.email)}</td>
+                    <td class="py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-parchment border border-rule capitalize">${u.tier}</span></td>
+                    <td class="py-2 text-ash">${u.total_analyses}</td>
+                    <td class="py-2 text-ash font-mono text-xs">$${u.total_cost_dollars.toFixed(2)}</td>
+                    <td class="py-2 text-ash text-xs">${u.last_analysis ? timeAgo(u.last_analysis) : 'never'}</td>
+                    <td class="py-2 text-ash text-xs">${timeAgo(u.created_at)}</td>
+                </tr>`
+            ).join('') || '<tr><td colspan="6" class="py-4 text-ash text-center">No users yet</td></tr>';
+
+        } catch (e) {
+            alert('Failed: ' + e.message);
+        }
+    }
+
+    async function fetchAdmin(path) {
+        const sep = path.includes('?') ? '&' : '?';
+        const resp = await fetch(API + path + sep + 'token=' + TOKEN);
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || resp.statusText);
+        }
+        return resp.json();
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function timeAgo(ts) {
+        if (!ts) return '';
+        const diff = (Date.now() - new Date(ts + 'Z').getTime()) / 1000;
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    document.getElementById('adminToken').addEventListener('keydown', e => { if (e.key === 'Enter') loadDashboard(); });
+    </script>
+</body>
+</html>
