@@ -15,30 +15,20 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                            950: '#052e16',
-                        },
-                        surface: {
-                            50: '#fafaf9',
-                            100: '#f5f5f4',
-                            200: '#e7e5e4',
-                            800: '#1c1917',
-                            900: '#0c0a09',
-                            950: '#0a0908',
-                        }
+                        obsidian: '#0D0D0D',
+                        parchment: '#F8F6F1',
+                        cream: '#F0EBE3',
+                        dune: '#B8A98A',
+                        'dune-light': '#D6CBBA',
+                        deep: '#1A1714',
+                        charcoal: '#2C2C2C',
+                        ash: '#6B6560',
+                        stone: '#BFBAB3',
+                        rule: '#D6D1CA',
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Instrument Serif', 'Georgia', 'serif'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
                         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
                     }
                 }
@@ -46,61 +36,30 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        .gradient-text {
-            background: linear-gradient(135deg, #22c55e 0%, #4ade80 50%, #86efac 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .code-block {
-            background: #0a0908;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        .code-block .line-number {
-            color: rgba(255,255,255,0.2);
-            user-select: none;
-        }
-        .code-block .key { color: #86efac; }
-        .code-block .string { color: #fbbf24; }
-        .code-block .number { color: #a78bfa; }
-        .code-block .bool { color: #f472b6; }
-        .code-block .null { color: #64748b; }
-        .code-block .comment { color: #64748b; }
-        .format-card {
-            transition: all 0.2s ease;
-        }
-        .format-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(34, 197, 94, 0.3);
-        }
-        .glow {
-            box-shadow: 0 0 60px rgba(34, 197, 94, 0.08);
-        }
-        @keyframes fade-in-up {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-in {
-            animation: fade-in-up 0.6s ease-out forwards;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+        .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B8A98A; font-family: 'DM Sans', sans-serif; }
+        .code-block { background: #1A1714; border: 1px solid #2C2C2C; }
+        .code-block .key { color: #B8A98A; }
+        .code-block .string { color: #D6CBBA; }
+        .code-block .comment { color: #6B6560; }
+        .format-card { transition: all 0.22s cubic-bezier(0.25, 1, 0.5, 1); }
+        .format-card:hover { transform: translateY(-2px); border-color: #B8A98A; }
+        .tag-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; background: #F0EBE3; border: 1px solid #D6D1CA; font-size: 12px; font-weight: 500; color: #0D0D0D; font-family: 'DM Sans', sans-serif; }
     </style>
 </head>
-<body class="bg-surface-950 text-white antialiased">
+<body class="bg-parchment text-obsidian antialiased font-sans">
 
     <!-- Nav -->
-    <nav class="fixed top-0 w-full z-50 bg-surface-950/80 backdrop-blur-xl border-b border-white/5">
+    <nav class="fixed top-0 w-full z-50 bg-parchment/90 backdrop-blur-xl border-b border-rule">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-2 font-bold text-lg">
-                <span class="text-brand-400">Creative</span>Tagger
-            </a>
-            <div class="hidden md:flex items-center gap-8 text-sm text-white/60">
-                <a href="#formats" class="hover:text-white transition">Formats</a>
-                <a href="#how-it-works" class="hover:text-white transition">How It Works</a>
-                <a href="#pricing" class="hover:text-white transition">Pricing</a>
-                <a href="#docs" class="hover:text-white transition">Docs</a>
+            <a href="#" class="font-display text-xl font-bold">Creative Tagger</a>
+            <div class="hidden md:flex items-center gap-8 text-sm text-ash">
+                <a href="#formats" class="hover:text-obsidian transition">Formats</a>
+                <a href="#how-it-works" class="hover:text-obsidian transition">How It Works</a>
+                <a href="#pricing" class="hover:text-obsidian transition">Pricing</a>
+                <a href="#docs" class="hover:text-obsidian transition">Docs</a>
             </div>
-            <a href="app.html" class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+            <a href="app.html" class="bg-obsidian hover:bg-charcoal text-parchment text-sm font-medium px-4 py-2 rounded-lg transition">
                 Open Dashboard
             </a>
         </div>
@@ -109,21 +68,18 @@
     <!-- Hero -->
     <section class="pt-32 pb-20 px-6">
         <div class="max-w-4xl mx-auto text-center">
-            <div class="inline-flex items-center gap-2 bg-brand-950/50 border border-brand-800/30 rounded-full px-4 py-1.5 text-sm text-brand-300 mb-8">
-                <span class="w-1.5 h-1.5 bg-brand-400 rounded-full"></span>
-                Now supporting 6 creative formats
-            </div>
-            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
-                Structured intelligence<br>for <span class="gradient-text">every ad creative</span>
+            <div class="eyebrow mb-8 inline-block">Now supporting 6 creative formats</div>
+            <h1 class="font-display text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+                Structured intelligence<br>for <em class="font-display italic">every ad creative</em>
             </h1>
-            <p class="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p class="text-lg md:text-xl text-ash max-w-2xl mx-auto mb-10 leading-relaxed">
                 POST any creative — video, image, carousel, landing page, email — and get back structured attributes, taxonomy classification, and standardized naming. One API call.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#pricing" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition shadow-lg shadow-brand-600/20">
+                <a href="app.html" class="bg-obsidian hover:bg-charcoal text-parchment font-semibold px-8 py-3.5 rounded-xl text-lg transition">
                     Start Free
                 </a>
-                <a href="#how-it-works" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium px-8 py-3.5 rounded-xl text-lg transition">
+                <a href="#how-it-works" class="bg-cream hover:bg-dune-light border border-rule text-obsidian font-medium px-8 py-3.5 rounded-xl text-lg transition">
                     See It Work
                 </a>
             </div>
@@ -134,10 +90,9 @@
     <section id="how-it-works" class="pb-24 px-6">
         <div class="max-w-5xl mx-auto">
             <div class="grid md:grid-cols-2 gap-6">
-                <!-- Request -->
                 <div>
-                    <div class="text-xs font-medium text-white/30 uppercase tracking-wider mb-3">Request</div>
-                    <div class="code-block rounded-xl p-5 font-mono text-sm leading-relaxed overflow-x-auto glow">
+                    <div class="eyebrow mb-3">Request</div>
+                    <div class="code-block rounded-xl p-5 font-mono text-sm leading-relaxed overflow-x-auto text-stone">
                         <div><span class="comment">// POST /analyze</span></div>
                         <div class="mt-2"><span class="key">curl</span> -X POST \</div>
                         <div class="pl-4">https://api.creativetagger.dev/analyze \</div>
@@ -145,10 +100,9 @@
                         <div class="pl-4">-F <span class="string">"brand_name=Nemah"</span></div>
                     </div>
                 </div>
-                <!-- Response -->
                 <div>
-                    <div class="text-xs font-medium text-white/30 uppercase tracking-wider mb-3">Response</div>
-                    <div class="code-block rounded-xl p-5 font-mono text-[13px] leading-relaxed overflow-x-auto glow">
+                    <div class="eyebrow mb-3">Response</div>
+                    <div class="code-block rounded-xl p-5 font-mono text-[13px] leading-relaxed overflow-x-auto text-stone">
                         <div>{</div>
                         <div class="pl-4"><span class="key">"format"</span>: <span class="string">"video"</span>,</div>
                         <div class="pl-4"><span class="key">"visual"</span>: {</div>
@@ -171,87 +125,81 @@
     </section>
 
     <!-- Formats -->
-    <section id="formats" class="py-24 px-6 border-t border-white/5">
+    <section id="formats" class="py-24 px-6 border-t border-rule">
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Every format. One endpoint.</h2>
-                <p class="text-white/40 text-lg max-w-xl mx-auto">Auto-detects format from your input. Same structured taxonomy across every creative type.</p>
+                <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Every format. One endpoint.</h2>
+                <p class="text-ash text-lg max-w-xl mx-auto">Auto-detects format from your input. Same structured taxonomy across every creative type.</p>
             </div>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <!-- Video -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Video Ads</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">Short-form video with full visual, audio, and transcript analysis. Frame extraction, trending audio detection, Whisper transcription.</p>
+                    <p class="text-ash text-sm leading-relaxed">Short-form video with full visual, audio, and transcript analysis. Frame extraction, trending audio detection, Whisper transcription.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Hook Detection</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Audio Fingerprint</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Transcript</span>
+                        <span class="tag-pill">Hook Detection</span>
+                        <span class="tag-pill">Audio Fingerprint</span>
+                        <span class="tag-pill">Transcript</span>
                     </div>
                 </div>
-                <!-- Image -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Static Images</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">Image ads with text overlay extraction, dominant color detection, and auto aspect ratio. Same visual taxonomy as video.</p>
+                    <p class="text-ash text-sm leading-relaxed">Image ads with text overlay extraction, dominant color detection, and auto aspect ratio. Same visual taxonomy as video.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Text Overlay</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Color Analysis</span>
+                        <span class="tag-pill">Text Overlay</span>
+                        <span class="tag-pill">Color Analysis</span>
                     </div>
                 </div>
-                <!-- Carousel -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Carousels</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">Per-slide classification plus aggregate analysis. Detects narrative arc (Problem-Solution, Before-After, etc.) and visual coherence.</p>
+                    <p class="text-ash text-sm leading-relaxed">Per-slide classification plus aggregate analysis. Detects narrative arc and visual coherence across all cards.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Per-Slide</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Narrative Arc</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Coherence</span>
+                        <span class="tag-pill">Per-Slide</span>
+                        <span class="tag-pill">Narrative Arc</span>
+                        <span class="tag-pill">Coherence</span>
                     </div>
                 </div>
-                <!-- Long Video -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Long-Form Video</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">YouTube and long-form content with automatic chapter detection, content structure analysis, and pacing pattern classification.</p>
+                    <p class="text-ash text-sm leading-relaxed">YouTube and long-form content with automatic chapter detection, content structure analysis, and pacing pattern classification.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Chapters</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Structure</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Pacing</span>
+                        <span class="tag-pill">Chapters</span>
+                        <span class="tag-pill">Structure</span>
+                        <span class="tag-pill">Pacing</span>
                     </div>
                 </div>
-                <!-- Landing Page -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Landing Pages</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">Renders desktop + mobile via headless browser. Extracts headlines, CTAs, form complexity, social proof, and visual hierarchy.</p>
+                    <p class="text-ash text-sm leading-relaxed">Renders desktop and mobile via headless browser. Extracts headlines, CTAs, form complexity, social proof, and visual hierarchy.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Desktop + Mobile</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Social Proof</span>
+                        <span class="tag-pill">Desktop + Mobile</span>
+                        <span class="tag-pill">Social Proof</span>
                     </div>
                 </div>
-                <!-- Email -->
-                <div class="format-card bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <div class="format-card bg-cream border border-rule rounded-2xl p-6">
+                    <div class="w-10 h-10 bg-parchment rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-dune" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </div>
                     <h3 class="font-semibold text-lg mb-2">Email Creatives</h3>
-                    <p class="text-white/40 text-sm leading-relaxed">HTML email analysis with subject line extraction, CTA clarity scoring, visual density classification, and personalization detection.</p>
+                    <p class="text-ash text-sm leading-relaxed">HTML email analysis with subject line extraction, CTA clarity scoring, visual density classification, and personalization detection.</p>
                     <div class="mt-4 flex flex-wrap gap-1.5">
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Subject Line</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">CTA Clarity</span>
-                        <span class="text-xs bg-white/5 px-2 py-0.5 rounded text-white/40">Personalization</span>
+                        <span class="tag-pill">Subject Line</span>
+                        <span class="tag-pill">CTA Clarity</span>
+                        <span class="tag-pill">Personalization</span>
                     </div>
                 </div>
             </div>
@@ -259,210 +207,204 @@
     </section>
 
     <!-- Taxonomy -->
-    <section class="py-24 px-6 border-t border-white/5">
+    <section class="py-24 px-6 border-t border-rule">
         <div class="max-w-6xl mx-auto">
             <div class="grid md:grid-cols-2 gap-16 items-center">
                 <div>
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4">The taxonomy is the product</h2>
-                    <p class="text-white/40 text-lg leading-relaxed mb-8">
-                        18 hook types. 10 visual styles. 11 CTAs. 9 emotions. 9 carousel arcs. 8 content structures. All designed by performance marketers who name 500+ creatives a week.
+                    <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">The taxonomy is the product</h2>
+                    <p class="text-ash text-lg leading-relaxed mb-8">
+                        28 dimensions. 18 hook types. 20 messaging angles. 24 creative archetypes. 15 emotions. All designed by performance marketers who name 500+ creatives a week.
                     </p>
                     <div class="space-y-4">
                         <div class="flex items-start gap-3">
-                            <div class="w-5 h-5 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <div class="w-2 h-2 rounded-full bg-brand-400"></div>
+                            <div class="w-5 h-5 rounded-full bg-cream border border-dune flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div class="w-1.5 h-1.5 rounded-full bg-dune"></div>
                             </div>
                             <div>
-                                <div class="font-medium text-sm">Consistent at scale</div>
-                                <div class="text-white/40 text-sm">Same taxonomy every time. No more "UGC-style" vs "ugc" vs "User Generated".</div>
+                                <div class="font-semibold text-sm">Consistent at scale</div>
+                                <div class="text-ash text-sm">Same taxonomy every time. No more "UGC-style" vs "ugc" vs "User Generated".</div>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="w-5 h-5 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <div class="w-2 h-2 rounded-full bg-brand-400"></div>
+                            <div class="w-5 h-5 rounded-full bg-cream border border-dune flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div class="w-1.5 h-1.5 rounded-full bg-dune"></div>
                             </div>
                             <div>
-                                <div class="font-medium text-sm">Cross-platform naming</div>
-                                <div class="text-white/40 text-sm">Auto-generated file names that work in Meta, TikTok, Google, and your asset library.</div>
+                                <div class="font-semibold text-sm">Cross-platform naming</div>
+                                <div class="text-ash text-sm">Auto-generated file names that work in Meta, TikTok, Google, and your asset library.</div>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="w-5 h-5 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <div class="w-2 h-2 rounded-full bg-brand-400"></div>
+                            <div class="w-5 h-5 rounded-full bg-cream border border-dune flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div class="w-1.5 h-1.5 rounded-full bg-dune"></div>
                             </div>
                             <div>
-                                <div class="font-medium text-sm">Open taxonomy, paid engine</div>
-                                <div class="text-white/40 text-sm">The taxonomy spec is public. The AI that applies it instantly is the product.</div>
+                                <div class="font-semibold text-sm">Open taxonomy, paid engine</div>
+                                <div class="text-ash text-sm">The taxonomy spec is public. The AI that applies it instantly is the product.</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="code-block rounded-xl p-6 font-mono text-sm glow">
-                    <div class="text-white/30 text-xs mb-3">// Visual taxonomy</div>
+                <div class="code-block rounded-xl p-6 font-mono text-sm text-stone">
+                    <div class="comment text-xs mb-3">// 28-dimension taxonomy</div>
                     <div class="space-y-1">
-                        <div><span class="key">hook_type</span>  <span class="text-white/20">→</span> <span class="string">UGC ProdShot Testi ProbAg BA Demo</span></div>
+                        <div><span class="key">hook_type</span>  <span class="text-charcoal/30">&#8594;</span> <span class="string">UGC ProdShot Testi ProbAg BA Demo</span></div>
                         <div class="pl-14"><span class="string">Unbox Life TalkHead TextOvr Mashup</span></div>
                         <div class="pl-14"><span class="string">SocProof Founder Compare Tutorial</span></div>
                         <div class="pl-14"><span class="string">Meme StopScrl Other</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">style</span>      <span class="text-white/20">→</span> <span class="string">Min Bold Org Dark Bright Edit</span></div>
-                        <div class="pl-14"><span class="string">LoFi HiFi Native Brand</span></div>
+                        <div><span class="key">messaging</span>  <span class="text-charcoal/30">&#8594;</span> <span class="string">ProbSol BeforeAfter SocProof Aspire</span></div>
+                        <div class="pl-14"><span class="string">Edu Compare Scarcity ValuePrice</span></div>
+                        <div class="pl-14"><span class="string">MythBust BTS Community Guarantee</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">cta</span>        <span class="text-white/20">→</span> <span class="string">ShopNow LearnMore SignUp GetOffer</span></div>
-                        <div class="pl-14"><span class="string">BookNow Download Subscribe</span></div>
-                        <div class="pl-14"><span class="string">WatchMore SwipeUp None Other</span></div>
+                        <div><span class="key">creative</span>   <span class="text-charcoal/30">&#8594;</span> <span class="string">Testimonial ProdDemo Lifestyle GRWM</span></div>
+                        <div class="pl-14"><span class="string">DayInLife Skit Advertorial Mashup</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">emotion</span>    <span class="text-white/20">→</span> <span class="string">Urgent Curious Trust Fear Desire</span></div>
-                        <div class="pl-14"><span class="string">Humor Aspire Relief Neutral</span></div>
+                        <div><span class="key">emotion</span>    <span class="text-charcoal/30">&#8594;</span> <span class="string">Urgent Curious Trust Fear Desire</span></div>
+                        <div class="pl-14"><span class="string">Humor Aspire Empower Nostalgic</span></div>
                     </div>
-                    <div class="mt-4 text-white/30 text-xs">// + audio, carousel, longform, LP, email taxonomies</div>
+                    <div class="mt-4 comment text-xs">// + offer, social proof, brand, production, audio...</div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works -->
-    <section class="py-24 px-6 border-t border-white/5">
+    <section class="py-24 px-6 border-t border-rule">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-16">Three steps. Any format.</h2>
+            <h2 class="font-display text-3xl md:text-4xl font-bold mb-16">Three steps. Any format.</h2>
             <div class="grid md:grid-cols-3 gap-8">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-lg mx-auto mb-4">1</div>
+                    <div class="w-12 h-12 rounded-xl bg-cream border border-rule flex items-center justify-center text-dune font-bold text-lg mx-auto mb-4 font-display">1</div>
                     <h3 class="font-semibold mb-2">Upload</h3>
-                    <p class="text-white/40 text-sm">POST a file, URL, or HTML. The API auto-detects the format — video, image, carousel, landing page, or email.</p>
+                    <p class="text-ash text-sm">POST a file, URL, or HTML. The API auto-detects the format — video, image, carousel, landing page, or email.</p>
                 </div>
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-lg mx-auto mb-4">2</div>
+                    <div class="w-12 h-12 rounded-xl bg-cream border border-rule flex items-center justify-center text-dune font-bold text-lg mx-auto mb-4 font-display">2</div>
                     <h3 class="font-semibold mb-2">Analyze</h3>
-                    <p class="text-white/40 text-sm">Gemini Flash classifies against the full taxonomy. Frames extracted, audio fingerprinted, pages rendered, text parsed.</p>
+                    <p class="text-ash text-sm">Classifies against the full 28-dimension taxonomy. Frames extracted, audio fingerprinted, pages rendered, text parsed.</p>
                 </div>
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-lg mx-auto mb-4">3</div>
+                    <div class="w-12 h-12 rounded-xl bg-cream border border-rule flex items-center justify-center text-dune font-bold text-lg mx-auto mb-4 font-display">3</div>
                     <h3 class="font-semibold mb-2">Build</h3>
-                    <p class="text-white/40 text-sm">Get structured JSON back. Feed it into your reporting, naming, dashboards, or creative strategy workflows.</p>
+                    <p class="text-ash text-sm">Get structured JSON back. Feed it into your reporting, naming, dashboards, or creative strategy workflows.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Pricing -->
-    <section id="pricing" class="py-24 px-6 border-t border-white/5">
+    <section id="pricing" class="py-24 px-6 border-t border-rule">
         <div class="max-w-5xl mx-auto">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Pay per analysis</h2>
-                <p class="text-white/40 text-lg">Credit-based pricing. Heavier formats cost more credits.</p>
+                <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Simple per-analysis pricing</h2>
+                <p class="text-ash text-lg">No credits. No math. Just flat rates per format.</p>
             </div>
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Free -->
-                <div class="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
-                    <div class="text-sm text-white/40 font-medium mb-2">Free</div>
-                    <div class="text-4xl font-bold mb-1">$0</div>
-                    <div class="text-white/30 text-sm mb-6">50 credits / month</div>
-                    <ul class="space-y-3 text-sm text-white/50 mb-8">
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> All 6 formats</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Full taxonomy</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Naming conventions</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Rate limited (10 RPM)</li>
+                <div class="bg-cream border border-rule rounded-2xl p-8">
+                    <div class="eyebrow mb-2">Free</div>
+                    <div class="text-4xl font-bold font-display mb-1">$0</div>
+                    <div class="text-stone text-sm mb-6">100 analyses / month</div>
+                    <ul class="space-y-3 text-sm text-ash mb-8">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> All 6 formats</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Full 28-dimension taxonomy</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Naming conventions</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> MCP server + SDK</li>
                     </ul>
-                    <a href="#" class="block text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium px-6 py-3 rounded-xl transition text-sm">
+                    <a href="app.html" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-6 py-3 rounded-xl transition text-sm">
                         Get API Key
                     </a>
                 </div>
-                <!-- Pro -->
-                <div class="bg-white/[0.02] border border-brand-500/30 rounded-2xl p-8 relative">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-xs font-medium px-3 py-1 rounded-full">Most Popular</div>
-                    <div class="text-sm text-white/40 font-medium mb-2">Pro</div>
-                    <div class="text-4xl font-bold mb-1">$49<span class="text-lg text-white/30 font-normal">/mo</span></div>
-                    <div class="text-white/30 text-sm mb-6">1,000 credits / month</div>
-                    <ul class="space-y-3 text-sm text-white/50 mb-8">
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Everything in Free</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Forensic mode (video)</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Trending audio detection</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> 60 RPM</li>
+                <div class="bg-cream border-2 border-dune rounded-2xl p-8 relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-obsidian text-parchment text-xs font-medium px-3 py-1 rounded-full">Most Popular</div>
+                    <div class="eyebrow mb-2">Pro</div>
+                    <div class="text-4xl font-bold font-display mb-1">$49<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
+                    <div class="text-stone text-sm mb-6">1,000 analyses included</div>
+                    <ul class="space-y-3 text-sm text-ash mb-8">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Everything in Free</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.05/analysis overage</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Trending audio detection</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Priority processing</li>
                     </ul>
-                    <a href="#" class="block text-center bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-brand-600/20">
+                    <a href="app.html" class="block text-center bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-3 rounded-xl transition text-sm">
                         Start Pro
                     </a>
                 </div>
-                <!-- Platform -->
-                <div class="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
-                    <div class="text-sm text-white/40 font-medium mb-2">Platform</div>
-                    <div class="text-4xl font-bold mb-1">Custom</div>
-                    <div class="text-white/30 text-sm mb-6">Unlimited credits</div>
-                    <ul class="space-y-3 text-sm text-white/50 mb-8">
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Everything in Pro</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Competitor scanning</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Webhooks</li>
-                        <li class="flex items-center gap-2"><span class="text-brand-400">&#10003;</span> Dedicated support</li>
+                <div class="bg-cream border border-rule rounded-2xl p-8">
+                    <div class="eyebrow mb-2">Scale</div>
+                    <div class="text-4xl font-bold font-display mb-1">$199<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
+                    <div class="text-stone text-sm mb-6">10,000 analyses included</div>
+                    <ul class="space-y-3 text-sm text-ash mb-8">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Everything in Pro</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.02/analysis overage</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Vertical taxonomy packs</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Dedicated support</li>
                     </ul>
-                    <a href="mailto:hello@creativetagger.dev" class="block text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium px-6 py-3 rounded-xl transition text-sm">
+                    <a href="mailto:hello@creativetagger.dev" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-6 py-3 rounded-xl transition text-sm">
                         Talk to Us
                     </a>
                 </div>
             </div>
-            <!-- Credit costs -->
             <div class="mt-12 text-center">
-                <div class="text-sm text-white/30 mb-4">Credit costs per analysis</div>
-                <div class="flex flex-wrap justify-center gap-4 text-sm">
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Image <span class="text-white font-medium">1 cr</span></span>
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Email <span class="text-white font-medium">1 cr</span></span>
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Video <span class="text-white font-medium">2 cr</span></span>
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Landing Page <span class="text-white font-medium">2 cr</span></span>
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Carousel <span class="text-white font-medium">3 cr</span></span>
-                    <span class="bg-white/5 px-3 py-1.5 rounded-lg text-white/50">Long Video <span class="text-white font-medium">4 cr</span></span>
+                <div class="eyebrow mb-4">Per-analysis rates</div>
+                <div class="flex flex-wrap justify-center gap-3 text-sm">
+                    <span class="tag-pill">Image $0.05</span>
+                    <span class="tag-pill">Email $0.05</span>
+                    <span class="tag-pill">Video $0.10</span>
+                    <span class="tag-pill">Landing Page $0.10</span>
+                    <span class="tag-pill">Carousel $0.10</span>
+                    <span class="tag-pill">Long Video $0.25</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Docs -->
-    <section id="docs" class="py-24 px-6 border-t border-white/5">
+    <section id="docs" class="py-24 px-6 border-t border-rule">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">Built for developers</h2>
-            <p class="text-white/40 text-lg mb-10">FastAPI with auto-generated OpenAPI docs. SDKs coming soon.</p>
+            <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Built for developers and agents</h2>
+            <p class="text-ash text-lg mb-10">FastAPI with auto-generated OpenAPI docs. MCP server for AI agents. Python SDK.</p>
             <div class="grid sm:grid-cols-3 gap-4">
-                <a href="#" class="bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl p-5 transition text-left">
-                    <div class="font-medium mb-1">API Reference</div>
-                    <div class="text-sm text-white/40">Interactive Swagger docs with try-it-now.</div>
+                <a href="https://steadfast-vitality-production.up.railway.app/docs" class="bg-cream hover:bg-dune-light border border-rule rounded-xl p-5 transition text-left">
+                    <div class="font-semibold mb-1">API Reference</div>
+                    <div class="text-sm text-ash">Interactive Swagger docs.</div>
                 </a>
-                <a href="#" class="bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl p-5 transition text-left">
-                    <div class="font-medium mb-1">Taxonomy Spec</div>
-                    <div class="text-sm text-white/40">Full enum definitions and naming convention rules.</div>
+                <a href="https://github.com/stephenlavender/creative-tagger-mcp" class="bg-cream hover:bg-dune-light border border-rule rounded-xl p-5 transition text-left">
+                    <div class="font-semibold mb-1">MCP Server</div>
+                    <div class="text-sm text-ash">For Claude, Cursor, and AI agents.</div>
                 </a>
-                <a href="#" class="bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl p-5 transition text-left">
-                    <div class="font-medium mb-1">Quickstart</div>
-                    <div class="text-sm text-white/40">Analyze your first creative in under 2 minutes.</div>
+                <a href="https://github.com/stephenlavender/creative-tagger-sdk" class="bg-cream hover:bg-dune-light border border-rule rounded-xl p-5 transition text-left">
+                    <div class="font-semibold mb-1">Python SDK</div>
+                    <div class="text-sm text-ash">pip install creative-tagger</div>
                 </a>
             </div>
         </div>
     </section>
 
     <!-- CTA -->
-    <section class="py-24 px-6 border-t border-white/5">
+    <section class="py-24 px-6 border-t border-rule">
         <div class="max-w-3xl mx-auto text-center">
-            <h2 class="text-3xl md:text-5xl font-bold mb-6">Stop naming creatives<br>by hand</h2>
-            <p class="text-white/40 text-lg mb-10 max-w-xl mx-auto">Join the teams using Creative Tagger to classify, name, and analyze every ad creative automatically.</p>
-            <a href="#pricing" class="inline-block bg-brand-600 hover:bg-brand-500 text-white font-semibold px-10 py-4 rounded-xl text-lg transition shadow-lg shadow-brand-600/20">
+            <h2 class="font-display text-3xl md:text-5xl font-bold mb-6">Stop naming creatives<br><em class="italic">by hand</em></h2>
+            <p class="text-ash text-lg mb-10 max-w-xl mx-auto">Classify, name, and analyze every ad creative automatically. 28 dimensions. One API call.</p>
+            <a href="app.html" class="inline-block bg-obsidian hover:bg-charcoal text-parchment font-semibold px-10 py-4 rounded-xl text-lg transition">
                 Get Your API Key
             </a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 px-6 border-t border-white/5">
+    <footer class="py-12 px-6 border-t border-rule">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-2 font-bold">
-                <span class="text-brand-400">Creative</span>Tagger
-            </div>
-            <div class="flex items-center gap-6 text-sm text-white/30">
-                <a href="#" class="hover:text-white/60 transition">Docs</a>
-                <a href="#" class="hover:text-white/60 transition">API Status</a>
-                <a href="#" class="hover:text-white/60 transition">Privacy</a>
-                <a href="#" class="hover:text-white/60 transition">Terms</a>
-                <a href="https://github.com/stephenlavender/creative-tagger" class="hover:text-white/60 transition">GitHub</a>
+            <div class="font-display font-bold text-lg">Creative Tagger</div>
+            <div class="flex items-center gap-6 text-sm text-stone">
+                <a href="https://steadfast-vitality-production.up.railway.app/docs" class="hover:text-obsidian transition">Docs</a>
+                <a href="#" class="hover:text-obsidian transition">API Status</a>
+                <a href="#" class="hover:text-obsidian transition">Privacy</a>
+                <a href="#" class="hover:text-obsidian transition">Terms</a>
+                <a href="https://github.com/stephenlavender/creative-tagger" class="hover:text-obsidian transition">GitHub</a>
             </div>
         </div>
     </footer>
