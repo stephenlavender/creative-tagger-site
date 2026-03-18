@@ -12,53 +12,63 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', 950: '#052e16' },
-                        surface: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 700: '#44403c', 800: '#1c1917', 850: '#151210', 900: '#0c0a09', 950: '#0a0908' }
+                        obsidian: '#0D0D0D',
+                        parchment: '#F8F6F1',
+                        cream: '#F0EBE3',
+                        dune: '#B8A98A',
+                        'dune-light': '#D6CBBA',
+                        deep: '#1A1714',
+                        charcoal: '#2C2C2C',
+                        ash: '#6B6560',
+                        stone: '#BFBAB3',
+                        rule: '#D6D1CA',
                     },
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'Fira Code', 'monospace'] }
+                    fontFamily: {
+                        display: ['Instrument Serif', 'Georgia', 'serif'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        .drop-zone.dragover { border-color: #22c55e; background: rgba(34,197,94,0.05); }
-        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; }
-        .tag-green { background: rgba(34,197,94,0.1); color: #4ade80; }
-        .tag-blue { background: rgba(96,165,250,0.1); color: #60a5fa; }
-        .tag-amber { background: rgba(251,191,36,0.1); color: #fbbf24; }
-        .tag-purple { background: rgba(167,139,250,0.1); color: #a78bfa; }
-        .tag-pink { background: rgba(244,114,182,0.1); color: #f472b6; }
-        .tag-slate { background: rgba(148,163,184,0.1); color: #94a3b8; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+        .drop-zone.dragover { border-color: #B8A98A; background: rgba(184,169,138,0.05); }
+        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: #F0EBE3; border: 1px solid #D6D1CA; color: #0D0D0D; line-height: 1; }
+        .tag-active { background: #B8A98A; border-color: #B8A98A; color: #1A1714; }
+        .tag-muted { background: transparent; border-color: #BFBAB3; color: #6B6560; }
+        .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B8A98A; font-family: 'DM Sans', sans-serif; }
         .toast { animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 1.7s forwards; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
-        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #22c55e; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        .spinner { border: 3px solid #D6D1CA; border-top-color: #B8A98A; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .result-card { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .import-tab.tab-active { color: #4ade80; border-color: #22c55e; }
-        .import-tab:not(.tab-active) { border-color: transparent; }
-        .file-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; font-size: 13px; }
-        .file-row .name { flex: 1; color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .file-row .remove { color: rgba(255,255,255,0.2); cursor: pointer; }
-        .file-row .remove:hover { color: rgba(244,114,182,0.8); }
+        .result-card { animation: fadeIn 0.22s cubic-bezier(0.25, 1, 0.5, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .import-tab.tab-active { color: #B8A98A; border-color: #B8A98A; }
+        .import-tab:not(.tab-active) { border-color: transparent; color: #6B6560; }
+        .import-tab:not(.tab-active):hover { color: #0D0D0D; }
+        .file-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #F0EBE3; border: 1px solid #D6D1CA; border-radius: 5px; font-size: 13px; }
+        .file-row .name { flex: 1; color: #2C2C2C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-row .remove { color: #BFBAB3; cursor: pointer; }
+        .file-row .remove:hover { color: #C0392B; }
     </style>
 </head>
-<body class="bg-surface-950 text-white antialiased min-h-screen">
+<body class="bg-parchment text-obsidian antialiased min-h-screen font-sans">
 
     <!-- Top Bar -->
-    <header class="sticky top-0 z-50 bg-surface-950/80 backdrop-blur-xl border-b border-white/5">
+    <header class="sticky top-0 z-50 bg-parchment/90 backdrop-blur-xl border-b border-rule">
         <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-            <a href="index.html" class="flex items-center gap-2 font-bold">
-                <span class="text-brand-400">Creative</span>Tagger
+            <a href="index.html" class="flex items-center gap-2">
+                <span class="font-display text-xl font-bold text-obsidian">Creative Tagger</span>
             </a>
             <div class="flex items-center gap-4">
-                <button onclick="showSettings()" class="text-white/40 hover:text-white/70 transition text-sm flex items-center gap-1.5">
+                <button onclick="showSettings()" class="text-ash hover:text-obsidian transition text-sm flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Settings
                 </button>
-                <div id="creditBadge" class="text-xs bg-white/5 px-2.5 py-1 rounded-lg text-white/40 hidden">
+                <div id="creditBadge" class="text-xs bg-cream px-2.5 py-1 rounded-lg text-ash hidden">
                     <span id="creditCount">--</span> credits
                 </div>
             </div>
@@ -72,30 +82,30 @@
             <div>
                 <!-- Brand Name (always visible) -->
                 <div class="flex items-center gap-3 mb-4">
-                    <label class="text-sm text-white/40">Brand</label>
-                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-48 bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                    <label class="text-sm text-ash">Brand</label>
+                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-48 bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
                 </div>
 
                 <!-- Import Tabs -->
                 <div class="mb-8">
-                    <div class="flex border-b border-white/10 mb-0">
+                    <div class="flex border-b border-rule mb-0">
                         <button onclick="switchTab('local')" data-tab="local" class="import-tab tab-active px-5 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                             Local Upload
                         </button>
-                        <button onclick="switchTab('url')" data-tab="url" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                        <button onclick="switchTab('url')" data-tab="url" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-ash hover:text-charcoal transition flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                             URL
                         </button>
-                        <button onclick="switchTab('gdrive')" data-tab="gdrive" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                        <button onclick="switchTab('gdrive')" data-tab="gdrive" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-ash hover:text-charcoal transition flex items-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l-3.5-6.062L8.932 2h7l-8 13.938zM15.068 2l-3.5 6.062L19.567 22h-7l8-13.938zM8.932 2h7l3.5 6.062-3.5 6.062H5.432l3.5-6.062z" opacity="0.7"/></svg>
                             Google Drive
                         </button>
-                        <button onclick="switchTab('dropbox')" data-tab="dropbox" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                        <button onclick="switchTab('dropbox')" data-tab="dropbox" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-ash hover:text-charcoal transition flex items-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 3.75L6 9.5 0 5.75zm12 0l6 3.75-6 3.75-6-3.75zM0 13.25L6 9.5l6 3.75L6 17zm18-3.75l6 3.75-6 3.75-6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75z" opacity="0.7"/></svg>
                             Dropbox
                         </button>
-                        <button onclick="switchTab('airtable')" data-tab="airtable" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-white/40 hover:text-white/60 transition flex items-center gap-2">
+                        <button onclick="switchTab('airtable')" data-tab="airtable" class="import-tab px-5 py-3 text-sm font-medium border-b-2 border-transparent text-ash hover:text-charcoal transition flex items-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.5 2L2 6.5v11L11.5 22 21 17.5v-11zm0 2.08l6.93 3.47L11.5 11l-6.93-3.45zM4 8.14l7 3.5V19.5l-7-3.5zm8 11.36V11.64l7-3.5V15.5z" opacity="0.7"/></svg>
                             Airtable
                         </button>
@@ -103,99 +113,99 @@
 
                     <!-- Local Upload Tab -->
                     <div id="tab-local" class="tab-content">
-                        <div id="uploadZone" class="drop-zone border-2 border-dashed border-white/10 rounded-b-2xl p-10 text-center cursor-pointer hover:border-white/20 transition" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                        <div id="uploadZone" class="drop-zone border-2 border-dashed border-rule rounded-b-2xl p-10 text-center cursor-pointer hover:border-white/20 transition" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                             <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.html,.htm,.eml" onchange="handleFiles(this.files)">
                             <div class="flex flex-col items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                <div class="w-12 h-12 rounded-xl bg-cream flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                                 </div>
-                                <p class="text-white/60 font-medium">Drop files here or click to upload</p>
-                                <p class="text-white/30 text-sm">Video, image, or multiple images for carousel</p>
+                                <p class="text-charcoal font-medium">Drop files here or click to upload</p>
+                                <p class="text-stone text-sm">Video, image, or multiple images for carousel</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- URL Tab -->
                     <div id="tab-url" class="tab-content hidden">
-                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
+                        <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6">
                             <div class="flex gap-3">
-                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
-                                <button onclick="analyzeUrl()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
+                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-cream border border-rule rounded-xl px-4 py-3 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                <button onclick="analyzeUrl()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
                             </div>
-                            <p class="text-white/20 text-xs mt-3">Supports direct file URLs (video, image) and landing page URLs for screenshot analysis.</p>
+                            <p class="text-stone text-xs mt-3">Supports direct file URLs (video, image) and landing page URLs for screenshot analysis.</p>
                         </div>
                     </div>
 
                     <!-- Google Drive Tab -->
                     <div id="tab-gdrive" class="tab-content hidden">
-                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
+                        <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6">
                             <div id="gdriveSetup" class="text-center py-4">
-                                <p class="text-white/50 text-sm mb-4">Connect Google Drive to browse and import creatives</p>
+                                <p class="text-ash text-sm mb-4">Connect Google Drive to browse and import creatives</p>
                                 <div class="max-w-sm mx-auto space-y-3 mb-4">
-                                    <input type="text" id="gdriveClientId" placeholder="Google OAuth Client ID" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
-                                    <input type="text" id="gdriveApiKey" placeholder="Google API Key" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="gdriveClientId" placeholder="Google OAuth Client ID" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="gdriveApiKey" placeholder="Google API Key" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
                                 </div>
-                                <button onclick="connectGoogleDrive()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                <button onclick="connectGoogleDrive()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l-3.5-6.062L8.932 2h7l-8 13.938zM15.068 2l-3.5 6.062L19.567 22h-7l8-13.938zM8.932 2h7l3.5 6.062-3.5 6.062H5.432l3.5-6.062z"/></svg>
                                     Open Google Drive Picker
                                 </button>
-                                <p class="text-white/20 text-xs mt-3">Get credentials from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline hover:text-white/40">Google Cloud Console</a>. Enable the Picker API.</p>
+                                <p class="text-stone text-xs mt-3">Get credentials from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline hover:text-ash">Google Cloud Console</a>. Enable the Picker API.</p>
                             </div>
                             <div id="gdriveFiles" class="hidden">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-sm text-white/50">Selected files</span>
+                                    <span class="text-sm text-ash">Selected files</span>
                                     <button onclick="openGooglePicker()" class="text-xs text-brand-400 hover:text-brand-300 transition">Browse Drive</button>
                                 </div>
                                 <div id="gdriveFileList" class="space-y-2 mb-4"></div>
-                                <button onclick="analyzeGdriveFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                                <button onclick="analyzeGdriveFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Dropbox Tab -->
                     <div id="tab-dropbox" class="tab-content hidden">
-                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6 text-center py-8">
-                            <p class="text-white/50 text-sm mb-4">Select files from your Dropbox</p>
-                            <button onclick="openDropboxChooser()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                        <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6 text-center py-8">
+                            <p class="text-ash text-sm mb-4">Select files from your Dropbox</p>
+                            <button onclick="openDropboxChooser()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 3.75L6 9.5 0 5.75zm12 0l6 3.75-6 3.75-6-3.75zM0 13.25L6 9.5l6 3.75L6 17zm18-3.75l6 3.75-6 3.75-6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75z"/></svg>
                                 Choose from Dropbox
                             </button>
                             <div id="dropboxFiles" class="hidden mt-4">
                                 <div id="dropboxFileList" class="space-y-2 mb-4 text-left"></div>
-                                <button onclick="analyzeDropboxFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                                <button onclick="analyzeDropboxFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
                             </div>
                             <div id="dropboxSetup" class="hidden mt-4">
-                                <p class="text-white/20 text-xs">To enable Dropbox: add your Dropbox App Key in Settings</p>
+                                <p class="text-stone text-xs">To enable Dropbox: add your Dropbox App Key in Settings</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Airtable Tab -->
                     <div id="tab-airtable" class="tab-content hidden">
-                        <div class="bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-2xl p-6">
-                            <p class="text-white/50 text-sm mb-4">Import creatives from Airtable attachment fields</p>
+                        <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6">
+                            <p class="text-ash text-sm mb-4">Import creatives from Airtable attachment fields</p>
                             <div class="space-y-3 max-w-lg">
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="text" id="airtableToken" placeholder="Personal access token (pat...)" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
-                                    <input type="text" id="airtableBaseId" placeholder="Base ID (app...)" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="airtableToken" placeholder="Personal access token (pat...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="airtableBaseId" placeholder="Base ID (app...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="text" id="airtableTable" placeholder="Table name" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
-                                    <input type="text" id="airtableField" placeholder="Attachment field name" class="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                    <input type="text" id="airtableTable" placeholder="Table name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                    <input type="text" id="airtableField" placeholder="Attachment field name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
                                 </div>
-                                <button onclick="fetchAirtableRecords()" class="bg-white/10 hover:bg-white/15 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                <button onclick="fetchAirtableRecords()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                     Fetch Records
                                 </button>
                             </div>
                             <div id="airtableRecords" class="hidden mt-4">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-sm text-white/50" id="airtableRecordCount">0 records with attachments</span>
-                                    <button onclick="analyzeAirtableFiles()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-5 py-2 rounded-lg text-sm transition">Analyze All</button>
+                                    <span class="text-sm text-ash" id="airtableRecordCount">0 records with attachments</span>
+                                    <button onclick="analyzeAirtableFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-5 py-2 rounded-lg text-sm transition">Analyze All</button>
                                 </div>
                                 <div id="airtableRecordList" class="space-y-2 max-h-64 overflow-y-auto"></div>
                             </div>
-                            <p class="text-white/20 text-xs mt-3">Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="underline hover:text-white/40">airtable.com/create/tokens</a>. Base ID is in your Airtable URL.</p>
+                            <p class="text-stone text-xs mt-3">Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="underline hover:text-ash">airtable.com/create/tokens</a>. Base ID is in your Airtable URL.</p>
                         </div>
                     </div>
                 </div>
@@ -203,7 +213,7 @@
                 <!-- Loading State -->
                 <div id="loadingState" class="hidden flex flex-col items-center gap-4 py-16">
                     <div class="spinner"></div>
-                    <p class="text-white/40 text-sm" id="loadingText">Analyzing creative...</p>
+                    <p class="text-ash text-sm" id="loadingText">Analyzing creative...</p>
                 </div>
 
                 <!-- Results -->
@@ -214,11 +224,11 @@
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="font-semibold text-lg">Batch Results</h2>
                         <div class="flex gap-2">
-                            <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <button onclick="exportCSV()" class="bg-cream hover:bg-dune-light border border-rule text-charcoal text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Export CSV
                             </button>
-                            <button onclick="copyAllNaming()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <button onclick="copyAllNaming()" class="bg-cream hover:bg-dune-light border border-rule text-charcoal text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                                 Copy All Names
                             </button>
@@ -227,7 +237,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="border-b border-white/10 text-left text-white/40">
+                                <tr class="border-b border-rule text-left text-ash">
                                     <th class="pb-3 pr-4 font-medium">File</th>
                                     <th class="pb-3 pr-4 font-medium">Format</th>
                                     <th class="pb-3 pr-4 font-medium">Hook</th>
@@ -247,11 +257,11 @@
             <aside>
                 <div class="sticky top-20">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-sm text-white/50 uppercase tracking-wider">History</h3>
-                        <button onclick="clearHistory()" class="text-xs text-white/30 hover:text-white/50 transition">Clear</button>
+                        <h3 class="font-semibold text-sm text-ash uppercase tracking-wider">History</h3>
+                        <button onclick="clearHistory()" class="text-xs text-stone hover:text-ash transition">Clear</button>
                     </div>
                     <div id="historyList" class="space-y-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
-                        <p class="text-white/20 text-sm py-8 text-center">No analyses yet</p>
+                        <p class="text-stone text-sm py-8 text-center">No analyses yet</p>
                     </div>
                 </div>
             </aside>
@@ -260,26 +270,26 @@
     </main>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this)hideSettings()">
-        <div class="bg-surface-900 border border-white/10 rounded-2xl p-8 w-full max-w-md">
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideSettings()">
+        <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
             <h2 class="font-bold text-lg mb-6">Settings</h2>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm text-white/50 mb-1.5">API Endpoint</label>
-                    <input type="text" id="settingsEndpoint" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="https://api.creativetagger.dev">
+                    <label class="block text-sm text-ash mb-1.5">API Endpoint</label>
+                    <input type="text" id="settingsEndpoint" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="https://api.creativetagger.dev">
                 </div>
                 <div>
-                    <label class="block text-sm text-white/50 mb-1.5">API Key <span class="text-white/20">(optional)</span></label>
-                    <input type="password" id="settingsApiKey" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="ct_...">
+                    <label class="block text-sm text-ash mb-1.5">API Key <span class="text-stone">(optional)</span></label>
+                    <input type="password" id="settingsApiKey" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="ct_...">
                 </div>
                 <div>
-                    <label class="block text-sm text-white/50 mb-1.5">Default Brand Name</label>
-                    <input type="text" id="settingsDefaultBrand" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition" placeholder="Your Brand">
+                    <label class="block text-sm text-ash mb-1.5">Default Brand Name</label>
+                    <input type="text" id="settingsDefaultBrand" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition" placeholder="Your Brand">
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-8">
-                <button onclick="hideSettings()" class="px-4 py-2 text-sm text-white/50 hover:text-white transition">Cancel</button>
-                <button onclick="saveSettings()" class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium px-5 py-2 rounded-lg transition">Save</button>
+                <button onclick="hideSettings()" class="px-4 py-2 text-sm text-ash hover:text-obsidian transition">Cancel</button>
+                <button onclick="saveSettings()" class="bg-obsidian hover:bg-charcoal text-obsidian text-sm font-medium px-5 py-2 rounded-lg transition">Save</button>
             </div>
         </div>
     </div>
@@ -463,19 +473,19 @@
                 <div>
                     <h2 class="font-bold text-xl">${escHtml(filename)}</h2>
                     <div class="flex items-center gap-3 mt-1.5">
-                        <span class="tag tag-green">${data.format || 'video'}</span>
-                        <span class="text-white/30 text-xs">${data.processing_time_ms || 0}ms</span>
-                        <span class="text-white/30 text-xs">${data.model_used || ''}</span>
+                        <span class="tag">${data.format || 'video'}</span>
+                        <span class="text-stone text-xs">${data.processing_time_ms || 0}ms</span>
+                        <span class="text-stone text-xs">${data.model_used || ''}</span>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-sm px-3 py-1.5 rounded-lg transition text-white/60">CSV</button>
+                    <button onclick="exportCSV()" class="bg-cream hover:bg-dune-light border border-rule text-sm px-3 py-1.5 rounded-lg transition text-charcoal">CSV</button>
                 </div>
             </div>
 
             <!-- Naming Conventions -->
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Naming Conventions</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Naming Conventions</h3>
                 ${n.default ? namingRow('Default', n.default) : ''}
                 ${n.compact ? namingRow('Compact', n.compact) : ''}
                 ${n.extended ? namingRow('Extended', n.extended) : ''}
@@ -483,122 +493,122 @@
             </div>
 
             <!-- Visual Attributes -->
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Visual Attributes</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Visual Attributes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${attrCell('Hook Type', v.hook_type, 'green')}
-                    ${attrCell('Visual Style', v.visual_style, 'blue')}
-                    ${attrCell('Talent', v.talent_type, 'purple')}
-                    ${attrCell('CTA', v.cta_type, 'amber')}
-                    ${attrCell('Emotion', v.primary_emotion, 'pink')}
-                    ${attrCell('Aspect Ratio', v.aspect_ratio, 'slate')}
-                    ${v.duration_seconds ? attrCell('Duration', v.duration_seconds + 's', 'slate') : ''}
+                    ${attrCell('Hook Type', v.hook_type)}
+                    ${attrCell('Visual Style', v.visual_style)}
+                    ${attrCell('Talent', v.talent_type)}
+                    ${attrCell('CTA', v.cta_type)}
+                    ${attrCell('Emotion', v.primary_emotion)}
+                    ${attrCell('Aspect Ratio', v.aspect_ratio)}
+                    ${v.duration_seconds ? attrCell('Duration', v.duration_seconds + 's') : ''}
                 </div>
             </div>
 
             <!-- Audio (if present) -->
             ${a.audio_type ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Audio Attributes</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Audio Attributes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${attrCell('Audio Type', a.audio_type, 'green')}
-                    ${a.music_style ? attrCell('Music Style', a.music_style, 'blue') : ''}
-                    ${a.vo_tone ? attrCell('VO Tone', a.vo_tone, 'purple') : ''}
-                    ${a.vo_pacing ? attrCell('VO Pacing', a.vo_pacing, 'slate') : ''}
-                    ${a.vo_gender ? attrCell('VO Gender', a.vo_gender, 'pink') : ''}
-                    ${data.audio_shortcode ? attrCell('Shortcode', data.audio_shortcode, 'amber') : ''}
+                    ${attrCell('Audio Type', a.audio_type)}
+                    ${a.music_style ? attrCell('Music Style', a.music_style) : ''}
+                    ${a.vo_tone ? attrCell('VO Tone', a.vo_tone) : ''}
+                    ${a.vo_pacing ? attrCell('VO Pacing', a.vo_pacing) : ''}
+                    ${a.vo_gender ? attrCell('VO Gender', a.vo_gender) : ''}
+                    ${data.audio_shortcode ? attrCell('Shortcode', data.audio_shortcode) : ''}
                 </div>
             </div>` : ''}
 
             <!-- Image-specific -->
             ${data.text_overlay_content ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Image Details</h3>
-                <div class="text-sm text-white/60 mb-2"><span class="text-white/30">Text Overlay:</span> ${escHtml(data.text_overlay_content)}</div>
-                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-2"><span class="text-white/30 text-sm">Colors:</span>${data.dominant_colors.map(c => `<div class="w-6 h-6 rounded" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Image Details</h3>
+                <div class="text-sm text-charcoal mb-2"><span class="text-stone">Text Overlay:</span> ${escHtml(data.text_overlay_content)}</div>
+                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-2"><span class="text-stone text-sm">Colors:</span>${data.dominant_colors.map(c => `<div class="w-6 h-6 rounded" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
             </div>` : ''}
 
             <!-- Carousel slides -->
             ${data.slides ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Carousel — ${data.slide_count} Slides ${data.carousel_arc ? `<span class="tag tag-green ml-2">${data.carousel_arc}</span>` : ''} ${data.coherence_score ? `<span class="text-white/30 ml-2">${Math.round(data.coherence_score * 100)}% coherence</span>` : ''}</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Carousel — ${data.slide_count} Slides ${data.carousel_arc ? `<span class="tag ml-2">${data.carousel_arc}</span>` : ''} ${data.coherence_score ? `<span class="text-stone ml-2">${Math.round(data.coherence_score * 100)}% coherence</span>` : ''}</h3>
                 <div class="space-y-2">
                     ${data.slides.map(s => `
-                    <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
-                        <span class="text-white/20 text-xs w-6">S${s.slide_number}</span>
-                        <span class="tag tag-green">${s.hook_type}</span>
-                        <span class="tag tag-blue">${s.visual_style}</span>
-                        <span class="tag tag-amber">${s.cta_type}</span>
-                        <span class="tag tag-pink">${s.primary_emotion}</span>
-                        ${s.text_overlay_content ? `<span class="text-white/30 text-xs truncate max-w-[200px]">"${escHtml(s.text_overlay_content)}"</span>` : ''}
+                    <div class="flex items-center gap-3 py-2 border-b border-rule last:border-0">
+                        <span class="text-stone text-xs w-6">S${s.slide_number}</span>
+                        <span class="tag">${s.hook_type}</span>
+                        <span class="tag">${s.visual_style}</span>
+                        <span class="tag">${s.cta_type}</span>
+                        <span class="tag">${s.primary_emotion}</span>
+                        ${s.text_overlay_content ? `<span class="text-stone text-xs truncate max-w-[200px]">"${escHtml(s.text_overlay_content)}"</span>` : ''}
                     </div>`).join('')}
                 </div>
             </div>` : ''}
 
             <!-- Chapters (long-form) -->
             ${data.chapters ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Chapters ${data.content_structure ? `<span class="tag tag-green ml-2">${data.content_structure}</span>` : ''} ${data.pacing_pattern ? `<span class="tag tag-blue ml-2">${data.pacing_pattern}</span>` : ''}</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Chapters ${data.content_structure ? `<span class="tag ml-2">${data.content_structure}</span>` : ''} ${data.pacing_pattern ? `<span class="tag ml-2">${data.pacing_pattern}</span>` : ''}</h3>
                 <div class="space-y-1">
                     ${data.chapters.map(ch => `
                     <div class="flex items-center gap-3 py-1.5 text-sm">
-                        <span class="text-white/20 font-mono text-xs">${formatTime(ch.start)}</span>
-                        <span class="text-white/70">${escHtml(ch.title)}</span>
-                        ${ch.summary ? `<span class="text-white/30 text-xs">${escHtml(ch.summary)}</span>` : ''}
+                        <span class="text-stone font-mono text-xs">${formatTime(ch.start)}</span>
+                        <span class="text-charcoal">${escHtml(ch.title)}</span>
+                        ${ch.summary ? `<span class="text-stone text-xs">${escHtml(ch.summary)}</span>` : ''}
                     </div>`).join('')}
                 </div>
             </div>` : ''}
 
             <!-- Landing page / Email specific -->
             ${data.visual_hierarchy ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Landing Page</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Landing Page</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${attrCell('Hierarchy', data.visual_hierarchy, 'green')}
-                    ${attrCell('Copy Tone', data.copy_tone, 'blue')}
-                    ${attrCell('Form', data.form_complexity, 'purple')}
-                    ${data.headline_text ? attrCell('Headline', data.headline_text, 'slate') : ''}
+                    ${attrCell('Hierarchy', data.visual_hierarchy)}
+                    ${attrCell('Copy Tone', data.copy_tone)}
+                    ${attrCell('Form', data.form_complexity)}
+                    ${data.headline_text ? attrCell('Headline', data.headline_text) : ''}
                 </div>
-                ${data.cta_texts ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.cta_texts.map(t => `<span class="tag tag-amber">${escHtml(t)}</span>`).join('')}</div>` : ''}
+                ${data.cta_texts ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.cta_texts.map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
             </div>` : ''}
 
             ${data.email_structure ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Email</h3>
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Email</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${attrCell('Structure', data.email_structure, 'green')}
-                    ${attrCell('Density', data.visual_density, 'blue')}
-                    ${attrCell('CTA Clarity', data.cta_clarity, 'amber')}
-                    ${attrCell('Personalization', data.personalization_type, 'purple')}
-                    ${data.subject_line ? attrCell('Subject', data.subject_line, 'slate') : ''}
+                    ${attrCell('Structure', data.email_structure)}
+                    ${attrCell('Density', data.visual_density)}
+                    ${attrCell('CTA Clarity', data.cta_clarity)}
+                    ${attrCell('Personalization', data.personalization_type)}
+                    ${data.subject_line ? attrCell('Subject', data.subject_line) : ''}
                 </div>
             </div>` : ''}
 
             <!-- Transcript -->
             ${data.transcript ? `
-            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Transcript</h3>
-                <p class="text-sm text-white/50 leading-relaxed">${escHtml(data.transcript.full_text)}</p>
-                ${data.transcript.key_phrases?.length ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.transcript.key_phrases.map(p => `<span class="tag tag-slate">${escHtml(p)}</span>`).join('')}</div>` : ''}
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Transcript</h3>
+                <p class="text-sm text-ash leading-relaxed">${escHtml(data.transcript.full_text)}</p>
+                ${data.transcript.key_phrases?.length ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.transcript.key_phrases.map(p => `<span class="tag tag-muted">${escHtml(p)}</span>`).join('')}</div>` : ''}
             </div>` : ''}
         </div>`;
     }
 
     function namingRow(label, value) {
-        return `<div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0 group">
+        return `<div class="flex items-center justify-between py-2 border-b border-rule last:border-0 group">
             <div>
-                <span class="text-white/30 text-xs">${label}</span>
-                <div class="font-mono text-sm text-white/80 mt-0.5">${escHtml(value)}</div>
+                <span class="text-stone text-xs">${label}</span>
+                <div class="font-mono text-sm text-obsidian/80 mt-0.5">${escHtml(value)}</div>
             </div>
-            <button onclick="copyText('${escAttr(value)}')" class="opacity-0 group-hover:opacity-100 text-white/30 hover:text-white/60 transition p-1">
+            <button onclick="copyText('${escAttr(value)}')" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal transition p-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             </button>
         </div>`;
     }
 
-    function attrCell(label, value, color) {
+    function attrCell(label, value) {
         if (!value) return '';
-        return `<div><div class="text-white/30 text-xs mb-1">${label}</div><span class="tag tag-${color}">${escHtml(String(value))}</span></div>`;
+        return `<div><div class="eyebrow mb-1">${label}</div><span class="tag">${escHtml(String(value))}</span></div>`;
     }
 
     // --- Render Batch ---
@@ -608,17 +618,17 @@
         container.classList.remove('hidden');
         const tbody = document.getElementById('batchTableBody');
         tbody.innerHTML = results.map(r => {
-            if (r.error) return `<tr class="border-b border-white/5"><td class="py-3 pr-4 text-white/50">${escHtml(r.filename)}</td><td colspan="6" class="py-3 text-red-400/60">Failed</td></tr>`;
+            if (r.error) return `<tr class="border-b border-rule"><td class="py-3 pr-4 text-ash">${escHtml(r.filename)}</td><td colspan="6" class="py-3 text-red-400/60">Failed</td></tr>`;
             const v = r.visual || {};
             const n = r.naming || {};
-            return `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
-                <td class="py-3 pr-4 text-white/70 text-xs max-w-[120px] truncate">${escHtml(r.filename)}</td>
-                <td class="py-3 pr-4"><span class="tag tag-green">${r.format || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag tag-green">${v.hook_type || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag tag-blue">${v.visual_style || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag tag-amber">${v.cta_type || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag tag-pink">${v.primary_emotion || ''}</span></td>
-                <td class="py-3 font-mono text-xs text-white/50 cursor-pointer hover:text-white/70" onclick="copyText('${escAttr(n.default || '')}')">${escHtml(n.default || '')}</td>
+            return `<tr class="border-b border-rule hover:bg-cream">
+                <td class="py-3 pr-4 text-charcoal text-xs max-w-[120px] truncate">${escHtml(r.filename)}</td>
+                <td class="py-3 pr-4"><span class="tag">${r.format || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag">${v.hook_type || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag">${v.visual_style || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag">${v.cta_type || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag">${v.primary_emotion || ''}</span></td>
+                <td class="py-3 font-mono text-xs text-ash cursor-pointer hover:text-charcoal" onclick="copyText('${escAttr(n.default || '')}')">${escHtml(n.default || '')}</td>
             </tr>`;
         }).join('');
     }
@@ -642,17 +652,17 @@
     function renderHistory() {
         const list = document.getElementById('historyList');
         if (!STATE.history.length) {
-            list.innerHTML = '<p class="text-white/20 text-sm py-8 text-center">No analyses yet</p>';
+            list.innerHTML = '<p class="text-stone text-sm py-8 text-center">No analyses yet</p>';
             return;
         }
         list.innerHTML = STATE.history.map(h => `
-        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-3 cursor-pointer hover:border-white/10 transition" onclick="copyText('${escAttr(h.naming_default || '')}')">
+        <div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-rule transition" onclick="copyText('${escAttr(h.naming_default || '')}')">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-white/50 truncate max-w-[180px]">${escHtml(h.filename)}</span>
-                <span class="tag tag-green text-[11px]">${h.format || ''}</span>
+                <span class="text-xs text-ash truncate max-w-[180px]">${escHtml(h.filename)}</span>
+                <span class="tag text-[11px]">${h.format || ''}</span>
             </div>
-            ${h.naming_default ? `<div class="font-mono text-[11px] text-white/30 mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
-            <div class="text-[10px] text-white/15 mt-1">${timeAgo(h.timestamp)}</div>
+            ${h.naming_default ? `<div class="font-mono text-[11px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
+            <div class="text-[10px] text-stone mt-1">${timeAgo(h.timestamp)}</div>
         </div>`).join('');
     }
 
@@ -717,7 +727,7 @@
     function showToast(msg, type = 'success') {
         const c = document.getElementById('toastContainer');
         const el = document.createElement('div');
-        el.className = `toast px-4 py-2.5 rounded-lg text-sm font-medium ${type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/20' : 'bg-brand-500/20 text-brand-300 border border-brand-500/20'}`;
+        el.className = `toast px-4 py-2.5 rounded-lg text-sm font-medium ${type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/20' : 'bg-cream text-deep border border-dune'}`;
         el.textContent = msg;
         c.appendChild(el);
         setTimeout(() => el.remove(), 2000);
@@ -750,12 +760,12 @@
     function switchTab(tab) {
         document.querySelectorAll('.import-tab').forEach(t => {
             t.classList.remove('tab-active');
-            t.classList.add('text-white/40', 'border-transparent');
+            t.classList.add('text-ash', 'border-transparent');
         });
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         const btn = document.querySelector(`[data-tab="${tab}"]`);
         btn.classList.add('tab-active');
-        btn.classList.remove('text-white/40', 'border-transparent');
+        btn.classList.remove('text-ash', 'border-transparent');
         document.getElementById(`tab-${tab}`).classList.remove('hidden');
     }
 
@@ -909,7 +919,7 @@
         list.innerHTML = dropboxSelectedFiles.map((f, i) => `
             <div class="file-row">
                 <span class="name">${escHtml(f.name)}</span>
-                <span class="text-white/20 text-xs">${(f.size / 1024).toFixed(0)}KB</span>
+                <span class="text-stone text-xs">${(f.size / 1024).toFixed(0)}KB</span>
                 <span class="remove" onclick="dropboxSelectedFiles.splice(${i},1);renderDropboxFiles()">&#10005;</span>
             </div>
         `).join('');
@@ -1006,8 +1016,8 @@
         list.innerHTML = airtableAttachments.map(f => `
             <div class="file-row">
                 <span class="name">${escHtml(f.name)}</span>
-                <span class="text-white/20 text-xs">${f.type || ''}</span>
-                <span class="text-white/20 text-xs">${f.size ? (f.size / 1024).toFixed(0) + 'KB' : ''}</span>
+                <span class="text-stone text-xs">${f.type || ''}</span>
+                <span class="text-stone text-xs">${f.size ? (f.size / 1024).toFixed(0) + 'KB' : ''}</span>
             </div>
         `).join('');
     }
