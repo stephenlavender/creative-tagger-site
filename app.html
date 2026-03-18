@@ -347,7 +347,7 @@
     }
 
     function getEndpoint() {
-        return (STATE.settings.endpoint || 'https://steadfast-vitality-production.up.railway.app').replace(/\/$/, '');
+        return (STATE.settings.endpoint || 'https://api.creativetagger.ai').replace(/\/$/, '');
     }
 
     function getApiKey() {
@@ -728,7 +728,7 @@
 
     // --- Settings ---
     function showSettings() {
-        document.getElementById('settingsEndpoint').value = STATE.settings.endpoint || 'https://steadfast-vitality-production.up.railway.app';
+        document.getElementById('settingsEndpoint').value = STATE.settings.endpoint || 'https://api.creativetagger.ai';
         document.getElementById('settingsApiKey').value = STATE.settings.apiKey || '';
         document.getElementById('settingsDefaultBrand').value = STATE.settings.defaultBrand || '';
         document.getElementById('settingsModal').classList.remove('hidden');
