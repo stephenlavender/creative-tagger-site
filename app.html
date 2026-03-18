@@ -65,6 +65,8 @@
                 <span class="text-[10px] font-sans font-medium text-stone tracking-wide">by The Bored Room</span>
             </a>
             <div class="flex items-center gap-4">
+                <button id="authBtn" onclick="showAuth()" class="text-dune hover:text-obsidian transition text-sm font-medium">Sign Up / Log In</button>
+                <span id="authUser" class="hidden text-sm text-ash"></span>
                 <button onclick="showSettings()" class="text-ash hover:text-obsidian transition text-sm flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Settings
@@ -270,6 +272,37 @@
         </div>
     </main>
 
+    <!-- Auth Modal -->
+    <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideAuth()">
+        <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
+            <h2 class="font-display text-2xl font-normal mb-2" id="authTitle">Get your API key</h2>
+            <p class="text-ash text-sm mb-6">Free tier. 100 analyses/month. No credit card.</p>
+            <div id="authSignup">
+                <div class="space-y-3">
+                    <input type="email" id="authEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                    <input type="password" id="authPassword" placeholder="Password (min 8 characters)" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                </div>
+                <button onclick="doSignup()" class="w-full bg-obsidian hover:bg-charcoal text-parchment font-medium py-3 rounded-xl text-sm transition mt-4">Create Account</button>
+                <p class="text-center text-sm text-stone mt-4">Already have an account? <button onclick="toggleAuthMode()" class="text-dune hover:text-obsidian transition">Log in</button></p>
+            </div>
+            <div id="authLogin" class="hidden">
+                <div class="space-y-3">
+                    <input type="email" id="loginEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                    <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                </div>
+                <button onclick="doLogin()" class="w-full bg-obsidian hover:bg-charcoal text-parchment font-medium py-3 rounded-xl text-sm transition mt-4">Log In</button>
+                <p class="text-center text-sm text-stone mt-4">Need an account? <button onclick="toggleAuthMode()" class="text-dune hover:text-obsidian transition">Sign up</button></p>
+            </div>
+            <div id="authSuccess" class="hidden text-center py-4">
+                <div class="eyebrow mb-2">Your API Key</div>
+                <div class="bg-cream border border-rule rounded-lg p-3 font-mono text-sm text-obsidian break-all mb-3" id="authKeyDisplay"></div>
+                <p class="text-ash text-xs mb-4">Save this key. It won't be shown again.</p>
+                <button onclick="copyAuthKey()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-2.5 rounded-xl text-sm transition">Copy Key & Close</button>
+            </div>
+            <div id="authError" class="hidden text-center text-sm mt-3" style="color:#C0392B"></div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideSettings()">
         <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
@@ -314,7 +347,7 @@
     }
 
     function getEndpoint() {
-        return (STATE.settings.endpoint || 'http://localhost:8000').replace(/\/$/, '');
+        return (STATE.settings.endpoint || 'https://steadfast-vitality-production.up.railway.app').replace(/\/$/, '');
     }
 
     function getApiKey() {
@@ -695,7 +728,7 @@
 
     // --- Settings ---
     function showSettings() {
-        document.getElementById('settingsEndpoint').value = STATE.settings.endpoint || 'http://localhost:8000';
+        document.getElementById('settingsEndpoint').value = STATE.settings.endpoint || 'https://steadfast-vitality-production.up.railway.app';
         document.getElementById('settingsApiKey').value = STATE.settings.apiKey || '';
         document.getElementById('settingsDefaultBrand').value = STATE.settings.defaultBrand || '';
         document.getElementById('settingsModal').classList.remove('hidden');
@@ -1050,6 +1083,111 @@
         results.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
     }
 
+    // --- Auth ---
+    function showAuth() { document.getElementById('authModal').classList.remove('hidden'); }
+    function hideAuth() { document.getElementById('authModal').classList.add('hidden'); }
+
+    function toggleAuthMode() {
+        const signup = document.getElementById('authSignup');
+        const login = document.getElementById('authLogin');
+        const title = document.getElementById('authTitle');
+        if (signup.classList.contains('hidden')) {
+            signup.classList.remove('hidden');
+            login.classList.add('hidden');
+            title.textContent = 'Get your API key';
+        } else {
+            signup.classList.add('hidden');
+            login.classList.remove('hidden');
+            title.textContent = 'Log in';
+        }
+        document.getElementById('authError').classList.add('hidden');
+    }
+
+    async function doSignup() {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        if (!email || password.length < 8) {
+            showAuthError('Email required, password must be 8+ characters');
+            return;
+        }
+        try {
+            const resp = await fetch(getEndpoint() + '/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showAuthError(data.detail || 'Signup failed'); return; }
+
+            // Save key to settings
+            STATE.settings.apiKey = data.api_key;
+            STATE.settings.userEmail = data.email;
+            STATE.settings.userTier = data.tier;
+            localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+
+            // Show key
+            document.getElementById('authSignup').classList.add('hidden');
+            document.getElementById('authLogin').classList.add('hidden');
+            document.getElementById('authSuccess').classList.remove('hidden');
+            document.getElementById('authKeyDisplay').textContent = data.api_key;
+            document.getElementById('authTitle').textContent = 'Account created';
+            updateAuthUI();
+        } catch (e) {
+            showAuthError('Connection failed. Is the API running?');
+        }
+    }
+
+    async function doLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        try {
+            const resp = await fetch(getEndpoint() + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showAuthError(data.detail || 'Login failed'); return; }
+
+            STATE.settings.userEmail = data.email;
+            STATE.settings.userTier = data.tier;
+            localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+            hideAuth();
+            updateAuthUI();
+            showToast('Logged in as ' + data.email);
+        } catch (e) {
+            showAuthError('Connection failed');
+        }
+    }
+
+    function copyAuthKey() {
+        const key = document.getElementById('authKeyDisplay').textContent;
+        navigator.clipboard.writeText(key).then(() => {
+            hideAuth();
+            showToast('API key copied. You\'re ready to analyze.');
+            // Reset modal for next time
+            document.getElementById('authSignup').classList.remove('hidden');
+            document.getElementById('authSuccess').classList.add('hidden');
+        });
+    }
+
+    function showAuthError(msg) {
+        const el = document.getElementById('authError');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    function updateAuthUI() {
+        const email = STATE.settings.userEmail;
+        const btn = document.getElementById('authBtn');
+        const user = document.getElementById('authUser');
+        if (email) {
+            btn.classList.add('hidden');
+            user.classList.remove('hidden');
+            user.textContent = email;
+        }
+    }
+
     // --- Restore saved integration credentials ---
     function restoreIntegrationSettings() {
         if (STATE.settings.gdriveClientId) document.getElementById('gdriveClientId').value = STATE.settings.gdriveClientId;
@@ -1062,6 +1200,7 @@
 
     init();
     restoreIntegrationSettings();
+    updateAuthUI();
     </script>
 </body>
 </html>
