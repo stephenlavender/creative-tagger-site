@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Tagger — Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', 950: '#052e16' },
+                        surface: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 700: '#44403c', 800: '#1c1917', 850: '#151210', 900: '#0c0a09', 950: '#0a0908' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'Fira Code', 'monospace'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        .drop-zone.dragover { border-color: #22c55e; background: rgba(34,197,94,0.05); }
+        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .tag-green { background: rgba(34,197,94,0.1); color: #4ade80; }
+        .tag-blue { background: rgba(96,165,250,0.1); color: #60a5fa; }
+        .tag-amber { background: rgba(251,191,36,0.1); color: #fbbf24; }
+        .tag-purple { background: rgba(167,139,250,0.1); color: #a78bfa; }
+        .tag-pink { background: rgba(244,114,182,0.1); color: #f472b6; }
+        .tag-slate { background: rgba(148,163,184,0.1); color: #94a3b8; }
+        .toast { animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 1.7s forwards; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #22c55e; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .result-card { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-surface-950 text-white antialiased min-h-screen">
+
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-50 bg-surface-950/80 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2 font-bold">
+                <span class="text-brand-400">Creative</span>Tagger
+            </a>
+            <div class="flex items-center gap-4">
+                <button onclick="showSettings()" class="text-white/40 hover:text-white/70 transition text-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Settings
+                </button>
+                <div id="creditBadge" class="text-xs bg-white/5 px-2.5 py-1 rounded-lg text-white/40 hidden">
+                    <span id="creditCount">--</span> credits
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="grid lg:grid-cols-[1fr_340px] gap-8">
+
+            <!-- Main Column -->
+            <div>
+                <!-- Upload Zone -->
+                <div id="uploadZone" class="drop-zone border-2 border-dashed border-white/10 rounded-2xl p-12 text-center cursor-pointer hover:border-white/20 transition mb-8" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.html,.htm,.eml" onchange="handleFiles(this.files)">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-white/60 font-medium">Drop files here or click to upload</p>
+                            <p class="text-white/30 text-sm mt-1">Video, image, or multiple images for carousel</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL / HTML Input -->
+                <div class="flex gap-3 mb-8">
+                    <div class="flex-1 relative">
+                        <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                    </div>
+                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-40 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                    <button onclick="analyzeUrl()" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-3 rounded-xl text-sm transition whitespace-nowrap">
+                        Analyze
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden flex flex-col items-center gap-4 py-16">
+                    <div class="spinner"></div>
+                    <p class="text-white/40 text-sm" id="loadingText">Analyzing creative...</p>
+                </div>
+
+                <!-- Results -->
+                <div id="resultsContainer"></div>
+
+                <!-- Batch Results Table -->
+                <div id="batchContainer" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-semibold text-lg">Batch Results</h2>
+                        <div class="flex gap-2">
+                            <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Export CSV
+                            </button>
+                            <button onclick="copyAllNaming()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                Copy All Names
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10 text-left text-white/40">
+                                    <th class="pb-3 pr-4 font-medium">File</th>
+                                    <th class="pb-3 pr-4 font-medium">Format</th>
+                                    <th class="pb-3 pr-4 font-medium">Hook</th>
+                                    <th class="pb-3 pr-4 font-medium">Style</th>
+                                    <th class="pb-3 pr-4 font-medium">CTA</th>
+                                    <th class="pb-3 pr-4 font-medium">Emotion</th>
+                                    <th class="pb-3 font-medium">Naming Convention</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar: History -->
+            <aside>
+                <div class="sticky top-20">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-sm text-white/50 uppercase tracking-wider">History</h3>
+                        <button onclick="clearHistory()" class="text-xs text-white/30 hover:text-white/50 transition">Clear</button>
+                    </div>
+                    <div id="historyList" class="space-y-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
+                        <p class="text-white/20 text-sm py-8 text-center">No analyses yet</p>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this)hideSettings()">
+        <div class="bg-surface-900 border border-white/10 rounded-2xl p-8 w-full max-w-md">
+            <h2 class="font-bold text-lg mb-6">Settings</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/50 mb-1.5">API Endpoint</label>
+                    <input type="text" id="settingsEndpoint" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="https://api.creativetagger.dev">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/50 mb-1.5">API Key <span class="text-white/20">(optional)</span></label>
+                    <input type="password" id="settingsApiKey" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="ct_...">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/50 mb-1.5">Default Brand Name</label>
+                    <input type="text" id="settingsDefaultBrand" class="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500/40 transition" placeholder="Your Brand">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button onclick="hideSettings()" class="px-4 py-2 text-sm text-white/50 hover:text-white transition">Cancel</button>
+                <button onclick="saveSettings()" class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium px-5 py-2 rounded-lg transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+    <script>
+    // --- State ---
+    const STATE = {
+        results: [],
+        history: JSON.parse(localStorage.getItem('ct_history') || '[]'),
+        settings: JSON.parse(localStorage.getItem('ct_settings') || '{}'),
+    };
+
+    // --- Init ---
+    function init() {
+        renderHistory();
+        const brand = STATE.settings.defaultBrand;
+        if (brand) document.getElementById('brandInput').value = brand;
+    }
+
+    function getEndpoint() {
+        return (STATE.settings.endpoint || 'http://localhost:8000').replace(/\/$/, '');
+    }
+
+    function getApiKey() {
+        return STATE.settings.apiKey || '';
+    }
+
+    function getBrand() {
+        return document.getElementById('brandInput').value.trim() || STATE.settings.defaultBrand || 'Brand';
+    }
+
+    // --- Upload Handlers ---
+    function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+    function handleDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+    function handleDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    }
+
+    async function handleFiles(files) {
+        if (!files.length) return;
+        if (files.length === 1) {
+            await analyzeSingleFile(files[0]);
+        } else {
+            await analyzeBatch(files);
+        }
+    }
+
+    // --- Single File Analysis ---
+    async function analyzeSingleFile(file) {
+        showLoading(`Analyzing ${file.name}...`);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('brand_name', getBrand());
+
+        try {
+            const data = await callApi('/analyze', formData);
+            hideLoading();
+            STATE.results = [{ filename: file.name, ...data }];
+            renderSingleResult(data, file.name);
+            addToHistory(data, file.name);
+        } catch (err) {
+            hideLoading();
+            showToast('Analysis failed: ' + err.message, 'error');
+        }
+    }
+
+    // --- URL Analysis ---
+    async function analyzeUrl() {
+        const url = document.getElementById('urlInput').value.trim();
+        if (!url) return;
+
+        const isLandingPage = url.startsWith('http') && !url.match(/\.(mp4|mov|avi|jpg|jpeg|png|webp|gif)(\?|$)/i);
+        showLoading('Analyzing URL...');
+
+        const formData = new FormData();
+        formData.append('brand_name', getBrand());
+
+        if (isLandingPage) {
+            formData.append('page_url', url);
+        } else {
+            formData.append('file_url', url);
+        }
+
+        try {
+            const data = await callApi('/analyze', formData);
+            hideLoading();
+            STATE.results = [{ filename: url, ...data }];
+            renderSingleResult(data, url);
+            addToHistory(data, url);
+            document.getElementById('urlInput').value = '';
+        } catch (err) {
+            hideLoading();
+            showToast('Analysis failed: ' + err.message, 'error');
+        }
+    }
+
+    // --- Batch Analysis ---
+    async function analyzeBatch(files) {
+        showLoading(`Analyzing ${files.length} files...`);
+        STATE.results = [];
+
+        // Check if all images (carousel) or individual files
+        const allImages = [...files].every(f => f.type.startsWith('image/'));
+
+        if (allImages && files.length > 1 && files.length <= 10) {
+            // Try as carousel first
+            const formData = new FormData();
+            for (const f of files) formData.append('files', f);
+            formData.append('brand_name', getBrand());
+            formData.append('format', 'carousel');
+
+            try {
+                const data = await callApi('/analyze', formData);
+                hideLoading();
+                STATE.results = [{ filename: `Carousel (${files.length} slides)`, ...data }];
+                renderSingleResult(data, `Carousel (${files.length} slides)`);
+                addToHistory(data, `Carousel (${files.length} slides)`);
+                return;
+            } catch {
+                // Fall through to individual analysis
+            }
+        }
+
+        // Analyze individually
+        const batchResults = [];
+        for (let i = 0; i < files.length; i++) {
+            document.getElementById('loadingText').textContent = `Analyzing ${i + 1} of ${files.length}...`;
+            const formData = new FormData();
+            formData.append('file', files[i]);
+            formData.append('brand_name', getBrand());
+            try {
+                const data = await callApi('/analyze', formData);
+                batchResults.push({ filename: files[i].name, ...data });
+            } catch {
+                batchResults.push({ filename: files[i].name, error: true });
+            }
+        }
+
+        hideLoading();
+        STATE.results = batchResults;
+        renderBatchResults(batchResults);
+        batchResults.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
+    }
+
+    // --- API Call ---
+    async function callApi(path, formData) {
+        const headers = {};
+        const apiKey = getApiKey();
+        if (apiKey) headers['X-API-Key'] = apiKey;
+
+        const resp = await fetch(getEndpoint() + path, {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+            throw new Error(err.detail || 'Request failed');
+        }
+        return resp.json();
+    }
+
+    // --- Render Single Result ---
+    function renderSingleResult(data, filename) {
+        const c = document.getElementById('resultsContainer');
+        document.getElementById('batchContainer').classList.add('hidden');
+        const v = data.visual || {};
+        const a = data.audio || {};
+        const n = data.naming || {};
+
+        c.innerHTML = `
+        <div class="result-card space-y-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="font-bold text-xl">${escHtml(filename)}</h2>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <span class="tag tag-green">${data.format || 'video'}</span>
+                        <span class="text-white/30 text-xs">${data.processing_time_ms || 0}ms</span>
+                        <span class="text-white/30 text-xs">${data.model_used || ''}</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-sm px-3 py-1.5 rounded-lg transition text-white/60">CSV</button>
+                </div>
+            </div>
+
+            <!-- Naming Conventions -->
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Naming Conventions</h3>
+                ${n.default ? namingRow('Default', n.default) : ''}
+                ${n.compact ? namingRow('Compact', n.compact) : ''}
+                ${n.extended ? namingRow('Extended', n.extended) : ''}
+                ${n.visual_only ? namingRow('Visual Only', n.visual_only) : ''}
+            </div>
+
+            <!-- Visual Attributes -->
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Visual Attributes</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${attrCell('Hook Type', v.hook_type, 'green')}
+                    ${attrCell('Visual Style', v.visual_style, 'blue')}
+                    ${attrCell('Talent', v.talent_type, 'purple')}
+                    ${attrCell('CTA', v.cta_type, 'amber')}
+                    ${attrCell('Emotion', v.primary_emotion, 'pink')}
+                    ${attrCell('Aspect Ratio', v.aspect_ratio, 'slate')}
+                    ${v.duration_seconds ? attrCell('Duration', v.duration_seconds + 's', 'slate') : ''}
+                </div>
+            </div>
+
+            <!-- Audio (if present) -->
+            ${a.audio_type ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Audio Attributes</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${attrCell('Audio Type', a.audio_type, 'green')}
+                    ${a.music_style ? attrCell('Music Style', a.music_style, 'blue') : ''}
+                    ${a.vo_tone ? attrCell('VO Tone', a.vo_tone, 'purple') : ''}
+                    ${a.vo_pacing ? attrCell('VO Pacing', a.vo_pacing, 'slate') : ''}
+                    ${a.vo_gender ? attrCell('VO Gender', a.vo_gender, 'pink') : ''}
+                    ${data.audio_shortcode ? attrCell('Shortcode', data.audio_shortcode, 'amber') : ''}
+                </div>
+            </div>` : ''}
+
+            <!-- Image-specific -->
+            ${data.text_overlay_content ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Image Details</h3>
+                <div class="text-sm text-white/60 mb-2"><span class="text-white/30">Text Overlay:</span> ${escHtml(data.text_overlay_content)}</div>
+                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-2"><span class="text-white/30 text-sm">Colors:</span>${data.dominant_colors.map(c => `<div class="w-6 h-6 rounded" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
+            </div>` : ''}
+
+            <!-- Carousel slides -->
+            ${data.slides ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Carousel — ${data.slide_count} Slides ${data.carousel_arc ? `<span class="tag tag-green ml-2">${data.carousel_arc}</span>` : ''} ${data.coherence_score ? `<span class="text-white/30 ml-2">${Math.round(data.coherence_score * 100)}% coherence</span>` : ''}</h3>
+                <div class="space-y-2">
+                    ${data.slides.map(s => `
+                    <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                        <span class="text-white/20 text-xs w-6">S${s.slide_number}</span>
+                        <span class="tag tag-green">${s.hook_type}</span>
+                        <span class="tag tag-blue">${s.visual_style}</span>
+                        <span class="tag tag-amber">${s.cta_type}</span>
+                        <span class="tag tag-pink">${s.primary_emotion}</span>
+                        ${s.text_overlay_content ? `<span class="text-white/30 text-xs truncate max-w-[200px]">"${escHtml(s.text_overlay_content)}"</span>` : ''}
+                    </div>`).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Chapters (long-form) -->
+            ${data.chapters ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Chapters ${data.content_structure ? `<span class="tag tag-green ml-2">${data.content_structure}</span>` : ''} ${data.pacing_pattern ? `<span class="tag tag-blue ml-2">${data.pacing_pattern}</span>` : ''}</h3>
+                <div class="space-y-1">
+                    ${data.chapters.map(ch => `
+                    <div class="flex items-center gap-3 py-1.5 text-sm">
+                        <span class="text-white/20 font-mono text-xs">${formatTime(ch.start)}</span>
+                        <span class="text-white/70">${escHtml(ch.title)}</span>
+                        ${ch.summary ? `<span class="text-white/30 text-xs">${escHtml(ch.summary)}</span>` : ''}
+                    </div>`).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Landing page / Email specific -->
+            ${data.visual_hierarchy ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Landing Page</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${attrCell('Hierarchy', data.visual_hierarchy, 'green')}
+                    ${attrCell('Copy Tone', data.copy_tone, 'blue')}
+                    ${attrCell('Form', data.form_complexity, 'purple')}
+                    ${data.headline_text ? attrCell('Headline', data.headline_text, 'slate') : ''}
+                </div>
+                ${data.cta_texts ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.cta_texts.map(t => `<span class="tag tag-amber">${escHtml(t)}</span>`).join('')}</div>` : ''}
+            </div>` : ''}
+
+            ${data.email_structure ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Email</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${attrCell('Structure', data.email_structure, 'green')}
+                    ${attrCell('Density', data.visual_density, 'blue')}
+                    ${attrCell('CTA Clarity', data.cta_clarity, 'amber')}
+                    ${attrCell('Personalization', data.personalization_type, 'purple')}
+                    ${data.subject_line ? attrCell('Subject', data.subject_line, 'slate') : ''}
+                </div>
+            </div>` : ''}
+
+            <!-- Transcript -->
+            ${data.transcript ? `
+            <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                <h3 class="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Transcript</h3>
+                <p class="text-sm text-white/50 leading-relaxed">${escHtml(data.transcript.full_text)}</p>
+                ${data.transcript.key_phrases?.length ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.transcript.key_phrases.map(p => `<span class="tag tag-slate">${escHtml(p)}</span>`).join('')}</div>` : ''}
+            </div>` : ''}
+        </div>`;
+    }
+
+    function namingRow(label, value) {
+        return `<div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0 group">
+            <div>
+                <span class="text-white/30 text-xs">${label}</span>
+                <div class="font-mono text-sm text-white/80 mt-0.5">${escHtml(value)}</div>
+            </div>
+            <button onclick="copyText('${escAttr(value)}')" class="opacity-0 group-hover:opacity-100 text-white/30 hover:text-white/60 transition p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </button>
+        </div>`;
+    }
+
+    function attrCell(label, value, color) {
+        if (!value) return '';
+        return `<div><div class="text-white/30 text-xs mb-1">${label}</div><span class="tag tag-${color}">${escHtml(String(value))}</span></div>`;
+    }
+
+    // --- Render Batch ---
+    function renderBatchResults(results) {
+        document.getElementById('resultsContainer').innerHTML = '';
+        const container = document.getElementById('batchContainer');
+        container.classList.remove('hidden');
+        const tbody = document.getElementById('batchTableBody');
+        tbody.innerHTML = results.map(r => {
+            if (r.error) return `<tr class="border-b border-white/5"><td class="py-3 pr-4 text-white/50">${escHtml(r.filename)}</td><td colspan="6" class="py-3 text-red-400/60">Failed</td></tr>`;
+            const v = r.visual || {};
+            const n = r.naming || {};
+            return `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
+                <td class="py-3 pr-4 text-white/70 text-xs max-w-[120px] truncate">${escHtml(r.filename)}</td>
+                <td class="py-3 pr-4"><span class="tag tag-green">${r.format || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag tag-green">${v.hook_type || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag tag-blue">${v.visual_style || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag tag-amber">${v.cta_type || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag tag-pink">${v.primary_emotion || ''}</span></td>
+                <td class="py-3 font-mono text-xs text-white/50 cursor-pointer hover:text-white/70" onclick="copyText('${escAttr(n.default || '')}')">${escHtml(n.default || '')}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // --- History ---
+    function addToHistory(data, filename) {
+        const entry = {
+            id: Date.now(),
+            filename,
+            format: data.format,
+            hook_type: data.visual?.hook_type,
+            naming_default: data.naming?.default,
+            timestamp: new Date().toISOString(),
+        };
+        STATE.history.unshift(entry);
+        if (STATE.history.length > 50) STATE.history = STATE.history.slice(0, 50);
+        localStorage.setItem('ct_history', JSON.stringify(STATE.history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        if (!STATE.history.length) {
+            list.innerHTML = '<p class="text-white/20 text-sm py-8 text-center">No analyses yet</p>';
+            return;
+        }
+        list.innerHTML = STATE.history.map(h => `
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-3 cursor-pointer hover:border-white/10 transition" onclick="copyText('${escAttr(h.naming_default || '')}')">
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-white/50 truncate max-w-[180px]">${escHtml(h.filename)}</span>
+                <span class="tag tag-green text-[11px]">${h.format || ''}</span>
+            </div>
+            ${h.naming_default ? `<div class="font-mono text-[11px] text-white/30 mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
+            <div class="text-[10px] text-white/15 mt-1">${timeAgo(h.timestamp)}</div>
+        </div>`).join('');
+    }
+
+    function clearHistory() {
+        STATE.history = [];
+        localStorage.setItem('ct_history', '[]');
+        renderHistory();
+    }
+
+    // --- Export ---
+    function exportCSV() {
+        if (!STATE.results.length) return showToast('No results to export', 'error');
+        const headers = ['Filename', 'Format', 'Hook Type', 'Visual Style', 'Talent', 'CTA', 'Emotion', 'Aspect Ratio', 'Duration', 'Audio Type', 'Audio Shortcode', 'Default Naming', 'Compact Naming'];
+        const rows = STATE.results.filter(r => !r.error).map(r => {
+            const v = r.visual || {};
+            const a = r.audio || {};
+            const n = r.naming || {};
+            return [r.filename, r.format, v.hook_type, v.visual_style, v.talent_type, v.cta_type, v.primary_emotion, v.aspect_ratio, v.duration_seconds || '', a.audio_type || '', r.audio_shortcode || '', n.default || '', n.compact || ''];
+        });
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        downloadFile(csv, 'creative-tagger-export.csv', 'text/csv');
+        showToast('CSV exported');
+    }
+
+    function copyAllNaming() {
+        const names = STATE.results.filter(r => !r.error && r.naming?.default).map(r => r.naming.default).join('\n');
+        copyText(names);
+    }
+
+    // --- Settings ---
+    function showSettings() {
+        document.getElementById('settingsEndpoint').value = STATE.settings.endpoint || 'http://localhost:8000';
+        document.getElementById('settingsApiKey').value = STATE.settings.apiKey || '';
+        document.getElementById('settingsDefaultBrand').value = STATE.settings.defaultBrand || '';
+        document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function hideSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+    function saveSettings() {
+        STATE.settings = {
+            endpoint: document.getElementById('settingsEndpoint').value.trim(),
+            apiKey: document.getElementById('settingsApiKey').value.trim(),
+            defaultBrand: document.getElementById('settingsDefaultBrand').value.trim(),
+        };
+        localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+        if (STATE.settings.defaultBrand) document.getElementById('brandInput').value = STATE.settings.defaultBrand;
+        hideSettings();
+        showToast('Settings saved');
+    }
+
+    // --- Helpers ---
+    function showLoading(text) {
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('loadingText').textContent = text;
+        document.getElementById('resultsContainer').innerHTML = '';
+        document.getElementById('batchContainer').classList.add('hidden');
+    }
+
+    function hideLoading() { document.getElementById('loadingState').classList.add('hidden'); }
+
+    function showToast(msg, type = 'success') {
+        const c = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = `toast px-4 py-2.5 rounded-lg text-sm font-medium ${type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/20' : 'bg-brand-500/20 text-brand-300 border border-brand-500/20'}`;
+        el.textContent = msg;
+        c.appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => showToast('Copy failed', 'error'));
+    }
+
+    function downloadFile(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escAttr(s) { return String(s).replace(/'/g, "\\'").replace(/\n/g, '\\n'); }
+    function formatTime(s) { const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m}:${String(sec).padStart(2, '0')}`; }
+    function timeAgo(ts) {
+        const diff = (Date.now() - new Date(ts).getTime()) / 1000;
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    init();
+    </script>
+</body>
+</html>
