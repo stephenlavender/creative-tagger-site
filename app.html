@@ -83,7 +83,7 @@
                 <!-- Brand Name (always visible) -->
                 <div class="flex items-center gap-3 mb-4">
                     <label class="text-sm text-ash">Brand</label>
-                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-48 bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                    <input type="text" id="brandInput" value="" placeholder="Brand name" class="w-48 bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
                 </div>
 
                 <!-- Import Tabs -->
@@ -113,7 +113,7 @@
 
                     <!-- Local Upload Tab -->
                     <div id="tab-local" class="tab-content">
-                        <div id="uploadZone" class="drop-zone border-2 border-dashed border-rule rounded-b-2xl p-10 text-center cursor-pointer hover:border-white/20 transition" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                        <div id="uploadZone" class="drop-zone border-2 border-dashed border-rule rounded-b-2xl p-10 text-center cursor-pointer hover:border-dune transition" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                             <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.html,.htm,.eml" onchange="handleFiles(this.files)">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-12 h-12 rounded-xl bg-cream flex items-center justify-center">
@@ -129,8 +129,8 @@
                     <div id="tab-url" class="tab-content hidden">
                         <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6">
                             <div class="flex gap-3">
-                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-cream border border-rule rounded-xl px-4 py-3 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
-                                <button onclick="analyzeUrl()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
+                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-cream border border-rule rounded-xl px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                                <button onclick="analyzeUrl()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
                             </div>
                             <p class="text-stone text-xs mt-3">Supports direct file URLs (video, image) and landing page URLs for screenshot analysis.</p>
                         </div>
@@ -142,10 +142,10 @@
                             <div id="gdriveSetup" class="text-center py-4">
                                 <p class="text-ash text-sm mb-4">Connect Google Drive to browse and import creatives</p>
                                 <div class="max-w-sm mx-auto space-y-3 mb-4">
-                                    <input type="text" id="gdriveClientId" placeholder="Google OAuth Client ID" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
-                                    <input type="text" id="gdriveApiKey" placeholder="Google API Key" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="gdriveClientId" placeholder="Google OAuth Client ID" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition font-mono text-xs">
+                                    <input type="text" id="gdriveApiKey" placeholder="Google API Key" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition font-mono text-xs">
                                 </div>
-                                <button onclick="connectGoogleDrive()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                <button onclick="connectGoogleDrive()" class="bg-dune-light hover:bg-dune/20 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l-3.5-6.062L8.932 2h7l-8 13.938zM15.068 2l-3.5 6.062L19.567 22h-7l8-13.938zM8.932 2h7l3.5 6.062-3.5 6.062H5.432l3.5-6.062z"/></svg>
                                     Open Google Drive Picker
                                 </button>
@@ -154,10 +154,10 @@
                             <div id="gdriveFiles" class="hidden">
                                 <div class="flex items-center justify-between mb-3">
                                     <span class="text-sm text-ash">Selected files</span>
-                                    <button onclick="openGooglePicker()" class="text-xs text-brand-400 hover:text-brand-300 transition">Browse Drive</button>
+                                    <button onclick="openGooglePicker()" class="text-xs text-dune hover:text-obsidian transition">Browse Drive</button>
                                 </div>
                                 <div id="gdriveFileList" class="space-y-2 mb-4"></div>
-                                <button onclick="analyzeGdriveFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                                <button onclick="analyzeGdriveFiles()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
                             </div>
                         </div>
                     </div>
@@ -166,13 +166,13 @@
                     <div id="tab-dropbox" class="tab-content hidden">
                         <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6 text-center py-8">
                             <p class="text-ash text-sm mb-4">Select files from your Dropbox</p>
-                            <button onclick="openDropboxChooser()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                            <button onclick="openDropboxChooser()" class="bg-dune-light hover:bg-dune/20 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 3.75L6 9.5 0 5.75zm12 0l6 3.75-6 3.75-6-3.75zM0 13.25L6 9.5l6 3.75L6 17zm18-3.75l6 3.75-6 3.75-6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75z"/></svg>
                                 Choose from Dropbox
                             </button>
                             <div id="dropboxFiles" class="hidden mt-4">
                                 <div id="dropboxFileList" class="space-y-2 mb-4 text-left"></div>
-                                <button onclick="analyzeDropboxFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
+                                <button onclick="analyzeDropboxFiles()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-2.5 rounded-xl text-sm transition w-full">Analyze Selected</button>
                             </div>
                             <div id="dropboxSetup" class="hidden mt-4">
                                 <p class="text-stone text-xs">To enable Dropbox: add your Dropbox App Key in Settings</p>
@@ -186,14 +186,14 @@
                             <p class="text-ash text-sm mb-4">Import creatives from Airtable attachment fields</p>
                             <div class="space-y-3 max-w-lg">
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="text" id="airtableToken" placeholder="Personal access token (pat...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
-                                    <input type="text" id="airtableBaseId" placeholder="Base ID (app...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition font-mono text-xs">
+                                    <input type="text" id="airtableToken" placeholder="Personal access token (pat...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition font-mono text-xs">
+                                    <input type="text" id="airtableBaseId" placeholder="Base ID (app...)" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition font-mono text-xs">
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="text" id="airtableTable" placeholder="Table name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
-                                    <input type="text" id="airtableField" placeholder="Attachment field name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-white/30 focus:outline-none focus:border-brand-500/40 transition">
+                                    <input type="text" id="airtableTable" placeholder="Table name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                                    <input type="text" id="airtableField" placeholder="Attachment field name" class="bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
                                 </div>
-                                <button onclick="fetchAirtableRecords()" class="bg-dune-light hover:bg-white/15 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
+                                <button onclick="fetchAirtableRecords()" class="bg-dune-light hover:bg-dune/20 text-obsidian font-medium px-5 py-2.5 rounded-xl text-sm transition inline-flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                     Fetch Records
                                 </button>
@@ -201,7 +201,7 @@
                             <div id="airtableRecords" class="hidden mt-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <span class="text-sm text-ash" id="airtableRecordCount">0 records with attachments</span>
-                                    <button onclick="analyzeAirtableFiles()" class="bg-obsidian hover:bg-charcoal text-obsidian font-medium px-5 py-2 rounded-lg text-sm transition">Analyze All</button>
+                                    <button onclick="analyzeAirtableFiles()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-5 py-2 rounded-lg text-sm transition">Analyze All</button>
                                 </div>
                                 <div id="airtableRecordList" class="space-y-2 max-h-64 overflow-y-auto"></div>
                             </div>
@@ -276,20 +276,20 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-ash mb-1.5">API Endpoint</label>
-                    <input type="text" id="settingsEndpoint" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="https://api.creativetagger.dev">
+                    <input type="text" id="settingsEndpoint" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-dune transition font-mono" placeholder="https://api.creativetagger.dev">
                 </div>
                 <div>
                     <label class="block text-sm text-ash mb-1.5">API Key <span class="text-stone">(optional)</span></label>
-                    <input type="password" id="settingsApiKey" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition font-mono" placeholder="ct_...">
+                    <input type="password" id="settingsApiKey" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-dune transition font-mono" placeholder="ct_...">
                 </div>
                 <div>
                     <label class="block text-sm text-ash mb-1.5">Default Brand Name</label>
-                    <input type="text" id="settingsDefaultBrand" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-brand-500/40 transition" placeholder="Your Brand">
+                    <input type="text" id="settingsDefaultBrand" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian focus:outline-none focus:border-dune transition" placeholder="Your Brand">
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-8">
                 <button onclick="hideSettings()" class="px-4 py-2 text-sm text-ash hover:text-obsidian transition">Cancel</button>
-                <button onclick="saveSettings()" class="bg-obsidian hover:bg-charcoal text-obsidian text-sm font-medium px-5 py-2 rounded-lg transition">Save</button>
+                <button onclick="saveSettings()" class="bg-obsidian hover:bg-charcoal text-parchment text-sm font-medium px-5 py-2 rounded-lg transition">Save</button>
             </div>
         </div>
     </div>
