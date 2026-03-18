@@ -1,0 +1,66 @@
+# Creative Tagger
+
+> Structured creative intelligence API for performance marketing. Analyzes any ad creative — video, image, carousel, landing page, email — and returns classification across 28 taxonomy dimensions with standardized naming conventions.
+
+## API
+
+Base URL: https://api.creativetagger.dev
+Docs: https://api.creativetagger.dev/docs
+
+### POST /analyze
+Upload any creative format and get structured classification.
+
+Accepts multipart form data:
+- `file` — file upload (image or video)
+- `files` — multiple files (carousel)
+- `file_url` — direct URL to image/video
+- `page_url` — landing page URL (rendered via headless browser)
+- `html_content` — raw HTML for email analysis
+- `brand_name` (required) — brand name for naming conventions
+- `format` (optional) — force format: video, image, carousel, landing_page, email, long_video
+
+Returns JSON with 28 taxonomy dimensions including:
+- hook_type, hook_style, visual_style, talent_type, cta_type, cta_placement
+- messaging_angle, creative_type, production_type, product_presence
+- offer_type, social_proof_elements, brand_presence, seasonality
+- text_overlay_treatment, primary_emotion, audio attributes
+- Generated naming conventions (default, compact, extended formats)
+
+### Authentication
+Pass API key via `X-API-Key` header or `Authorization: Bearer <key>`.
+
+## Taxonomy (28 Dimensions)
+
+1. Format: video, image, carousel, landing_page, email, long_video
+2. Aspect ratio: 9:16, 4:5, 1:1, 16:9, etc.
+3. Video length: Micro (0-6s), Short (6-15s), Standard (15-30s), Medium (30-60s), Long (60-90s), Extended (90-180s), LongForm (180s+)
+4. Hook type (18): UGC, ProdShot, Testi, ProbAg, BA, Unbox, Life, TalkHead, TextOvr, Mashup, Demo, SocProof, Founder, Compare, Tutorial, Meme, StopScrl, Other
+5. Hook style (15): TextOnly, TalkingHead, VOBroll, NativeCaption, SplitScreen, GreenScreen, ScreenRec, ProdCloseup, TrendAudio, StopMotion, StitchDuet, PhotoMontage, RapidCut, ASMR, HandDrawn
+6. Messaging angle (20): ProbSol, BeforeAfter, SocProof, FearRisk, Aspire, Edu, Compare, Scarcity, ValuePrice, Convenience, EmoStory, MythBust, BTS, Community, Guilt, Novelty, TrendRide, Health, ProDev, Guarantee
+7. CTA type (20): ShopNow, LearnMore, SignUp, GetOffer, BookNow, Download, Subscribe, WatchMore, SwipeUp, GetStarted, TryFree, GetQuote, AddToCart, TakeQuiz, ClaimDisc, SeePlans, SendMsg, ApplyNow, None, Other
+8. CTA placement (9): EndCard, Verbal, Persistent, CaptionOnly, MidRoll, ButtonOvr, SwipeLink, Multiple, NoCTA
+9. Creative type (24): Testimonial, ProdDemo, FounderStory, Lifestyle, Unboxing, Explainer, Transform, Comparison, Listicle, Skit, PodClip, GRWM, DayInLife, Reaction, Meme, Advertorial, Mashup, ProbAgit, ProdOnly, Catalog, ScreenTut, Announce, ManOnStreet, SplitScreen
+10. Talent type (15): NoTalent, Creator, Model, Founder, Customer, VO, Hands, Influencer, Expert, Employee, AIAvatar, Celebrity, MultiCreator, Family, Animated
+11. Product presence (10): Hero, Integrated, Secondary, Reveal, EndCard, NotShown, Multiple, Packaging, Ingredient, Closeup
+12. Offer type (17): PctOff, DollarOff, FreeShip, FreeGift, BOGO, Bundle, FreeTrial, SubDisc, MoneyBack, LimitedTime, FlashSale, Exclusive, Loyalty, PriceAnchor, NoOffer, Charitable, BNPL
+13. Emotion (15): Urgent, Curious, Trust, Fear, Desire, Humor, Aspire, Relief, Neutral, Emotional, Empower, Calming, Nostalgic, Shocking, Playful
+14. Production type (12): HighProd, LoFiUGC, AuthUGC, LifeLoc, ScreenRec, MoGraph, AIGen, MixedMedia, StockOvr, PodVisual, StopMotion, Whiteboard
+15. Text overlay (10): NoText, Minimal, Moderate, Heavy, Subtitles, Kinetic, LowerThird, FullCards, Handwritten, BrandStyled
+16. Social proof (16): StarRating, ReviewQuote, ReviewCount, CustCount, PressLogos, ExpertEnd, CelebEnd, BAPhotos, Awards, RealTime, UGCCompile, UserPhotos, CaseStudy, ClinicalData, CommSize, NoProof
+17. Brand presence (9): LogoAll, LogoEnd, LogoProd, NoLogo, BrandColors, BrandIntro, BrandText, BrandSpoken, Unbranded
+18. Seasonality (15): Evergreen, BFCM, Holiday, NewYear, Valentines, MothFath, BTS, Summer, Spring, Fall, PrimeDay, TaxSeason, Wedding, Sports, Cultural
+19-28. Audio type, music style, VO tone, copy style, user metadata (iteration type, creative stage, persona, funnel stage)
+
+## Integration
+
+- MCP Server: `pip install creative-tagger-mcp` then run `creative-tagger-mcp`
+- Python SDK: `pip install creative-tagger`
+- OpenAPI spec: https://api.creativetagger.dev/openapi.json
+
+## Use Cases
+
+- Tag and classify ad creatives at scale
+- Generate standardized naming conventions for ad platforms
+- Analyze competitor creative strategies
+- Connect creative attributes to performance data (CPA, ROAS, CTR)
+- Build creative intelligence databases for pattern recognition
