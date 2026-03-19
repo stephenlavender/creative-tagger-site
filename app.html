@@ -508,7 +508,7 @@
             next.status = 'done';
             next.result = data;
             STATE.results.push({ filename: next.filename, ...data });
-            addToHistory(data, next.filename);
+            loadServerHistory(); // Refresh sidebar from server
         } catch (err) {
             next.status = 'error';
             next.error = err.message;
@@ -521,15 +521,11 @@
 
     function renderQueue() {
         const list = document.getElementById('historyList');
-        const queueItems = QUEUE.items.filter(i => i.status !== 'done' || Date.now() - i.id < 60000);
-
-        // Build queue section + history
         let html = '';
 
-        // Active queue
+        // Active queue items (processing)
         const active = QUEUE.items.filter(i => i.status !== 'done');
         if (active.length) {
-            html += `<div class="mb-4">`;
             html += active.map(item => {
                 const statusIcon = item.status === 'analyzing'
                     ? `<div class="w-2 h-2 rounded-full bg-dune animate-pulse"></div>`
@@ -549,10 +545,9 @@
                     </div>
                 </div>`;
             }).join('');
-            html += `</div>`;
         }
 
-        // Recently completed (show result on click)
+        // Recently completed from queue
         const done = QUEUE.items.filter(i => i.status === 'done').slice(0, 3);
         done.forEach(item => {
             if (item.result) {
@@ -568,20 +563,35 @@
             }
         });
 
-        // Existing history
-        STATE.history.forEach(h => {
-            html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-dune transition mb-2" onclick="copyText('${escAttr(h.naming_default || '')}')">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(h.filename)}</span>
-                    <span class="tag text-[11px]">${h.format || ''}</span>
-                </div>
-                ${h.naming_default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
-                <div class="text-[10px] text-stone mt-1">${timeAgo(h.timestamp)}</div>
-            </div>`;
-        });
+        // Server-side history
+        if (STATE.serverHistory) {
+            STATE.serverHistory.forEach(h => {
+                html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-dune transition mb-2" onclick="viewLibraryItem(${h.id})">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(h.filename || 'Untitled')}</span>
+                        <span class="tag text-[11px]">${h.format || ''}</span>
+                    </div>
+                    ${h.naming_default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
+                    <div class="text-[10px] text-stone mt-1">${timeAgo(h.created_at)}</div>
+                </div>`;
+            });
+        }
 
         if (!html) html = '<p class="text-stone text-sm py-8 text-center">No analyses yet</p>';
         list.innerHTML = html;
+    }
+
+    async function loadServerHistory() {
+        const key = getApiKey();
+        if (!key) return;
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library?api_key=${key}&limit=20`);
+            if (resp.ok) {
+                const data = await resp.json();
+                STATE.serverHistory = data.items || [];
+                renderQueue();
+            }
+        } catch {}
     }
 
     // Legacy single file (kept for URL analysis)
@@ -1430,8 +1440,9 @@
 
     function buildAdName(item) {
         const sep = document.getElementById('librarySeparator').value;
+        const brand = getBrand().toUpperCase();
         const parts = [
-            getBrand().toUpperCase(),
+            brand,
             item.hook_type,
             item.messaging_angle,
             item.creative_type,
@@ -1439,13 +1450,25 @@
             item.cta_type,
             item.emotion,
         ].filter(Boolean);
-        return parts.join(sep);
+        let name = parts.join(sep);
+        // Append creative name if set and different from brand
+        const creative = (item.filename || '').replace(/\.[^.]+$/, '');
+        if (creative && creative.toUpperCase() !== brand) {
+            name = creative + sep + name;
+        }
+        return name;
     }
 
     function updateLibField(idx, field, value) {
         if (!LIB_DATA[idx]) return;
         LIB_DATA[idx][field] = value;
-        // Update the ad name cell
+        const nameCell = document.getElementById(`lib-adname-${idx}`);
+        if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[idx]);
+    }
+
+    function updateLibFilename(idx, value) {
+        if (!LIB_DATA[idx]) return;
+        LIB_DATA[idx].filename = value;
         const nameCell = document.getElementById(`lib-adname-${idx}`);
         if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[idx]);
     }
@@ -1490,7 +1513,7 @@
             tbody.innerHTML = data.items.map((item, idx) => `
                 <tr class="border-b border-rule/50 hover:bg-cream/50">
                     <td class="py-2 pr-2">
-                        <input type="text" value="${escAttr(item.filename || '')}" onchange="LIB_DATA[${idx}].filename=this.value" class="bg-transparent border-0 text-xs text-obsidian font-medium py-0.5 px-0 focus:outline-none w-full max-w-[140px]">
+                        <input type="text" value="${escAttr(item.filename || '')}" oninput="updateLibFilename(${idx},this.value)" class="bg-transparent border-0 text-xs text-obsidian font-medium py-0.5 px-0 focus:outline-none w-full max-w-[140px]">
                     </td>
                     <td class="py-2 pr-2"><span class="tag text-[10px]">${item.format || ''}</span></td>
                     <td class="py-2 pr-2">${makeDropdown('hook_type', item.hook_type, idx)}</td>
@@ -1705,6 +1728,7 @@
     checkAuthGate();
     restoreIntegrationSettings();
     updateAuthUI();
+    loadServerHistory();
     </script>
 </body>
 </html>
