@@ -46,6 +46,8 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .result-card { animation: fadeIn 0.22s cubic-bezier(0.25, 1, 0.5, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .app-tab.app-tab-active { color: #B8A98A; border-color: #B8A98A; }
+        .app-tab:not(.app-tab-active) { border-color: transparent; }
         .import-tab.tab-active { color: #B8A98A; border-color: #B8A98A; }
         .import-tab:not(.tab-active) { border-color: transparent; color: #6B6560; }
         .import-tab:not(.tab-active):hover { color: #0D0D0D; }
@@ -105,6 +107,47 @@
     </div>
 
     <main id="appMain" class="hidden max-w-7xl mx-auto px-6 py-8">
+        <!-- App Navigation -->
+        <div class="flex gap-1 mb-6 border-b border-rule">
+            <button onclick="switchAppTab('analyze')" data-apptab="analyze" class="app-tab app-tab-active px-5 py-2.5 text-sm font-medium border-b-2 transition">Analyze</button>
+            <button onclick="switchAppTab('library')" data-apptab="library" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Library</button>
+            <button onclick="switchAppTab('patterns')" data-apptab="patterns" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Patterns</button>
+        </div>
+
+        <!-- Library Tab -->
+        <div id="appTab-library" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex gap-2">
+                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-64">
+                    <select id="libraryFormatFilter" onchange="loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian">
+                        <option value="">All formats</option>
+                        <option value="video">Video</option>
+                        <option value="image">Image</option>
+                        <option value="carousel">Carousel</option>
+                        <option value="landing_page">Landing Page</option>
+                        <option value="email">Email</option>
+                    </select>
+                </div>
+                <span id="libraryCount" class="text-xs text-stone"></span>
+            </div>
+            <div id="libraryGrid" class="space-y-2"></div>
+            <div id="libraryEmpty" class="hidden text-center py-16 text-ash">
+                <p class="text-lg mb-2">No creatives yet</p>
+                <p class="text-sm">Upload your first creative in the Analyze tab.</p>
+            </div>
+        </div>
+
+        <!-- Patterns Tab -->
+        <div id="appTab-patterns" class="hidden">
+            <div id="patternsContent"></div>
+            <div id="patternsEmpty" class="hidden text-center py-16 text-ash">
+                <p class="text-lg mb-2">Not enough data</p>
+                <p class="text-sm">Analyze 5+ creatives to see patterns.</p>
+            </div>
+        </div>
+
+        <!-- Analyze Tab (existing content) -->
+        <div id="appTab-analyze">
         <div class="grid lg:grid-cols-[1fr_340px] gap-8">
 
             <!-- Main Column -->
@@ -296,6 +339,7 @@
             </aside>
 
         </div>
+        </div><!-- /appTab-analyze -->
     </main>
 
     <!-- Auth Modal -->
@@ -1268,6 +1312,146 @@
         document.getElementById('appMain').classList.add('hidden');
         document.getElementById('authBtn').classList.remove('hidden');
         document.getElementById('userNav').classList.add('hidden');
+    }
+
+    // --- App Tab Switching ---
+    function switchAppTab(tab) {
+        document.querySelectorAll('.app-tab').forEach(t => {
+            t.classList.remove('app-tab-active');
+            t.classList.add('text-ash', 'border-transparent');
+        });
+        document.querySelectorAll('[id^="appTab-"]').forEach(c => c.classList.add('hidden'));
+        const btn = document.querySelector(`[data-apptab="${tab}"]`);
+        btn.classList.add('app-tab-active');
+        btn.classList.remove('text-ash', 'border-transparent');
+        document.getElementById(`appTab-${tab}`).classList.remove('hidden');
+
+        if (tab === 'library') loadLibrary();
+        if (tab === 'patterns') loadPatterns();
+    }
+
+    // --- Library ---
+    async function loadLibrary() {
+        const key = getApiKey();
+        if (!key) return;
+        const search = document.getElementById('librarySearch').value.trim();
+        const format = document.getElementById('libraryFormatFilter').value;
+        let url = getEndpoint() + `/auth/library?api_key=${key}&limit=50`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (format) url += `&format=${encodeURIComponent(format)}`;
+
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const grid = document.getElementById('libraryGrid');
+            const empty = document.getElementById('libraryEmpty');
+            document.getElementById('libraryCount').textContent = `${data.total} creatives`;
+
+            if (!data.items.length) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            grid.innerHTML = data.items.map(item => `
+                <div class="bg-cream border border-rule rounded-lg p-4 flex items-center gap-4 hover:border-dune transition cursor-pointer" onclick="viewLibraryItem(${item.id})">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-sm font-medium text-obsidian truncate">${escHtml(item.filename || 'Untitled')}</span>
+                            <span class="tag text-[11px]">${item.format || ''}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${item.hook_type ? `<span class="tag text-[11px]">${item.hook_type}</span>` : ''}
+                            ${item.messaging_angle ? `<span class="tag text-[11px]">${item.messaging_angle}</span>` : ''}
+                            ${item.creative_type ? `<span class="tag text-[11px]">${item.creative_type}</span>` : ''}
+                            ${item.cta_type ? `<span class="tag text-[11px]">${item.cta_type}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        ${item.naming_default ? `<div class="font-mono text-[10px] text-stone truncate max-w-[220px]">${escHtml(item.naming_default)}</div>` : ''}
+                        <div class="text-[10px] text-stone mt-1">${timeAgo(item.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Library load failed:', e);
+        }
+    }
+
+    async function viewLibraryItem(id) {
+        const key = getApiKey();
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library/${id}?api_key=${key}`);
+            const data = await resp.json();
+            switchAppTab('analyze');
+            renderSingleResult(data, data.naming?.default || 'Library item');
+        } catch (e) {
+            showToast('Failed to load', 'error');
+        }
+    }
+
+    // --- Patterns ---
+    async function loadPatterns() {
+        const key = getApiKey();
+        if (!key) return;
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library/patterns?api_key=${key}`);
+            const data = await resp.json();
+            const content = document.getElementById('patternsContent');
+            const empty = document.getElementById('patternsEmpty');
+
+            if (data.total < 3) {
+                content.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            let html = `<div class="text-sm text-ash mb-4">${data.total} creatives analyzed</div>`;
+
+            // Insights
+            if (data.insights && data.insights.length) {
+                html += `<div class="bg-cream border border-rule rounded-xl p-5 mb-6">
+                    <h3 class="eyebrow mb-3">Insights</h3>
+                    <div class="space-y-2">
+                        ${data.insights.map(i => `<p class="text-sm text-charcoal">${escHtml(i)}</p>`).join('')}
+                    </div>
+                </div>`;
+            }
+
+            // Dimension breakdowns
+            html += '<div class="grid md:grid-cols-2 gap-4">';
+            const dimLabels = {
+                format: 'Format', hook_type: 'Hook Type', visual_style: 'Visual Style',
+                messaging_angle: 'Messaging Angle', creative_type: 'Creative Type',
+                production_type: 'Production', cta_type: 'CTA', emotion: 'Emotion'
+            };
+            for (const [dim, label] of Object.entries(dimLabels)) {
+                const d = (data.dimensions || {})[dim];
+                if (!d) continue;
+                const dist = d.distribution || {};
+                const max = Math.max(...Object.values(dist));
+                html += `<div class="bg-cream border border-rule rounded-xl p-5">
+                    <h3 class="eyebrow mb-3">${label}</h3>
+                    <div class="space-y-1.5">
+                        ${Object.entries(dist).map(([val, cnt]) => `
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-charcoal w-24 truncate">${val}</span>
+                            <div class="flex-1 h-2 bg-rule rounded-full overflow-hidden">
+                                <div class="h-full bg-dune rounded-full" style="width:${(cnt/max*100).toFixed(0)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-stone w-8 text-right">${cnt}</span>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+            html += '</div>';
+
+            content.innerHTML = html;
+        } catch (e) {
+            console.error('Patterns load failed:', e);
+        }
     }
 
     // --- Auth Gate ---
