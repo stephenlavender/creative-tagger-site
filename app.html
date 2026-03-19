@@ -116,9 +116,10 @@
 
         <!-- Library Tab -->
         <div id="appTab-library" class="hidden">
+            <!-- Controls -->
             <div class="flex items-center justify-between mb-4">
                 <div class="flex gap-2">
-                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-64">
+                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-56">
                     <select id="libraryFormatFilter" onchange="loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian">
                         <option value="">All formats</option>
                         <option value="video">Video</option>
@@ -128,9 +129,42 @@
                         <option value="email">Email</option>
                     </select>
                 </div>
-                <span id="libraryCount" class="text-xs text-stone"></span>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-stone">Separator</span>
+                        <select id="librarySeparator" onchange="rebuildAllNames()" class="bg-cream border border-rule rounded px-2 py-1 text-xs text-obsidian font-mono">
+                            <option value="_">_</option>
+                            <option value="-">-</option>
+                            <option value=" | "> | </option>
+                            <option value=" - "> - </option>
+                            <option value=".">.</option>
+                        </select>
+                    </div>
+                    <button onclick="exportLibraryCSV()" class="bg-cream hover:bg-dune-light border border-rule text-xs px-3 py-1.5 rounded-lg transition text-charcoal">Export CSV</button>
+                    <span id="libraryCount" class="text-xs text-stone"></span>
+                </div>
             </div>
-            <div id="libraryGrid" class="space-y-2"></div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="libraryTable">
+                    <thead>
+                        <tr class="border-b border-rule text-left">
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Creative Name</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Format</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Hook</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Angle</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Type</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Style</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">CTA</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Emotion</th>
+                            <th class="pb-2 pr-2 font-medium text-ash text-xs">Date</th>
+                            <th class="pb-2 font-medium text-ash text-xs">Ad Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="libraryTableBody"></tbody>
+                </table>
+            </div>
             <div id="libraryEmpty" class="hidden text-center py-16 text-ash">
                 <p class="text-lg mb-2">No creatives yet</p>
                 <p class="text-sm">Upload your first creative in the Analyze tab.</p>
@@ -1375,52 +1409,124 @@
     }
 
     // --- Library ---
+    let LIB_DATA = [];
+
+    const DROPDOWN_OPTIONS = {
+        hook_type: ['UGC','ProdShot','Testi','ProbAg','BA','Unbox','Life','TalkHead','TextOvr','Mashup','Demo','SocProof','Founder','Compare','Tutorial','Meme','StopScrl','Other'],
+        messaging_angle: ['ProbSol','BeforeAfter','SocProof','FearRisk','Aspire','Edu','Compare','Scarcity','ValuePrice','Convenience','EmoStory','MythBust','BTS','Community','Guilt','Novelty','TrendRide','Health','ProDev','Guarantee'],
+        creative_type: ['Testimonial','ProdDemo','FounderStory','Lifestyle','Unboxing','Explainer','Transform','Comparison','Listicle','Skit','PodClip','GRWM','DayInLife','Reaction','Meme','Advertorial','Mashup','ProbAgit','ProdOnly','Catalog','ScreenTut','Announce','ManOnStreet','SplitScreen'],
+        visual_style: ['Min','Bold','Org','Dark','Bright','Edit','LoFi','HiFi','Native','Brand','Retro','Pastel','HiContrast','Editorial'],
+        cta_type: ['ShopNow','LearnMore','SignUp','GetOffer','BookNow','Download','Subscribe','WatchMore','SwipeUp','GetStarted','TryFree','GetQuote','AddToCart','TakeQuiz','ClaimDisc','SeePlans','SendMsg','ApplyNow','None','Other'],
+        emotion: ['Urgent','Curious','Trust','Fear','Desire','Humor','Aspire','Relief','Neutral','Emotional','Empower','Calming','Nostalgic','Shocking','Playful'],
+    };
+
+    function makeDropdown(fieldName, currentVal, rowIdx) {
+        const opts = DROPDOWN_OPTIONS[fieldName] || [];
+        return `<select onchange="updateLibField(${rowIdx},'${fieldName}',this.value)" class="bg-transparent border-0 text-xs text-obsidian py-0.5 px-0 focus:outline-none cursor-pointer hover:text-dune w-full">
+            ${opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join('')}
+            ${!opts.includes(currentVal) && currentVal ? `<option value="${currentVal}" selected>${currentVal}</option>` : ''}
+        </select>`;
+    }
+
+    function buildAdName(item) {
+        const sep = document.getElementById('librarySeparator').value;
+        const parts = [
+            getBrand().toUpperCase(),
+            item.hook_type,
+            item.messaging_angle,
+            item.creative_type,
+            item.visual_style,
+            item.cta_type,
+            item.emotion,
+        ].filter(Boolean);
+        return parts.join(sep);
+    }
+
+    function updateLibField(idx, field, value) {
+        if (!LIB_DATA[idx]) return;
+        LIB_DATA[idx][field] = value;
+        // Update the ad name cell
+        const nameCell = document.getElementById(`lib-adname-${idx}`);
+        if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[idx]);
+    }
+
+    function rebuildAllNames() {
+        LIB_DATA.forEach((item, idx) => {
+            const nameCell = document.getElementById(`lib-adname-${idx}`);
+            if (nameCell) nameCell.textContent = buildAdName(item);
+        });
+    }
+
+    function formatDate(ts) {
+        if (!ts) return '';
+        const d = new Date(ts + (ts.includes('Z') ? '' : 'Z'));
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
     async function loadLibrary() {
         const key = getApiKey();
         if (!key) return;
         const search = document.getElementById('librarySearch').value.trim();
         const format = document.getElementById('libraryFormatFilter').value;
-        let url = getEndpoint() + `/auth/library?api_key=${key}&limit=50`;
+        let url = getEndpoint() + `/auth/library?api_key=${key}&limit=100`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (format) url += `&format=${encodeURIComponent(format)}`;
 
         try {
             const resp = await fetch(url);
             const data = await resp.json();
-            const grid = document.getElementById('libraryGrid');
+            const tbody = document.getElementById('libraryTableBody');
             const empty = document.getElementById('libraryEmpty');
             document.getElementById('libraryCount').textContent = `${data.total} creatives`;
 
             if (!data.items.length) {
-                grid.innerHTML = '';
+                tbody.innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
             empty.classList.add('hidden');
+            LIB_DATA = data.items;
 
-            grid.innerHTML = data.items.map(item => `
-                <div class="bg-cream border border-rule rounded-lg p-4 flex items-center gap-4 hover:border-dune transition cursor-pointer" onclick="viewLibraryItem(${item.id})">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-sm font-medium text-obsidian truncate">${escHtml(item.filename || 'Untitled')}</span>
-                            <span class="tag text-[11px]">${item.format || ''}</span>
+            tbody.innerHTML = data.items.map((item, idx) => `
+                <tr class="border-b border-rule/50 hover:bg-cream/50">
+                    <td class="py-2 pr-2">
+                        <input type="text" value="${escAttr(item.filename || '')}" onchange="LIB_DATA[${idx}].filename=this.value" class="bg-transparent border-0 text-xs text-obsidian font-medium py-0.5 px-0 focus:outline-none w-full max-w-[140px]">
+                    </td>
+                    <td class="py-2 pr-2"><span class="tag text-[10px]">${item.format || ''}</span></td>
+                    <td class="py-2 pr-2">${makeDropdown('hook_type', item.hook_type, idx)}</td>
+                    <td class="py-2 pr-2">${makeDropdown('messaging_angle', item.messaging_angle, idx)}</td>
+                    <td class="py-2 pr-2">${makeDropdown('creative_type', item.creative_type, idx)}</td>
+                    <td class="py-2 pr-2">${makeDropdown('visual_style', item.visual_style, idx)}</td>
+                    <td class="py-2 pr-2">${makeDropdown('cta_type', item.cta_type, idx)}</td>
+                    <td class="py-2 pr-2">${makeDropdown('emotion', item.emotion, idx)}</td>
+                    <td class="py-2 pr-2 text-[10px] text-stone whitespace-nowrap">${formatDate(item.created_at)}</td>
+                    <td class="py-2">
+                        <div class="flex items-center gap-1">
+                            <span id="lib-adname-${idx}" class="font-mono text-[10px] text-charcoal truncate max-w-[200px] cursor-pointer hover:text-obsidian" onclick="copyText(this.textContent)">${buildAdName(item)}</span>
+                            <button onclick="copyText(document.getElementById('lib-adname-${idx}').textContent)" class="text-stone hover:text-charcoal flex-shrink-0">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </button>
                         </div>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${item.hook_type ? `<span class="tag text-[11px]">${item.hook_type}</span>` : ''}
-                            ${item.messaging_angle ? `<span class="tag text-[11px]">${item.messaging_angle}</span>` : ''}
-                            ${item.creative_type ? `<span class="tag text-[11px]">${item.creative_type}</span>` : ''}
-                            ${item.cta_type ? `<span class="tag text-[11px]">${item.cta_type}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0">
-                        ${item.naming_default ? `<div class="font-mono text-[10px] text-stone truncate max-w-[220px]">${escHtml(item.naming_default)}</div>` : ''}
-                        <div class="text-[10px] text-stone mt-1">${timeAgo(item.created_at)}</div>
-                    </div>
-                </div>
+                    </td>
+                </tr>
             `).join('');
         } catch (e) {
             console.error('Library load failed:', e);
         }
+    }
+
+    function exportLibraryCSV() {
+        if (!LIB_DATA.length) return showToast('No data to export', 'error');
+        const sep = document.getElementById('librarySeparator').value;
+        const headers = ['Creative Name','Format','Hook Type','Messaging Angle','Creative Type','Visual Style','CTA','Emotion','Date','Ad Name'];
+        const rows = LIB_DATA.map(item => [
+            item.filename, item.format, item.hook_type, item.messaging_angle,
+            item.creative_type, item.visual_style, item.cta_type, item.emotion,
+            item.created_at, buildAdName(item),
+        ]);
+        const csv = [headers, ...rows].map(row => row.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+        downloadFile(csv, 'creative-tagger-library.csv', 'text/csv');
+        showToast('Library exported');
     }
 
     async function viewLibraryItem(id) {
