@@ -62,17 +62,19 @@
         <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
             <a href="https://creativetagger.ai" class="flex items-baseline gap-2">
                 <span class="font-display text-xl font-normal text-obsidian">Creative Tagger</span>
-                <span class="text-[10px] font-sans font-medium text-stone tracking-wide">by The Bored Room</span>
+                <a href="https://theboredroom.ai" target="_blank" class="text-[10px] font-sans font-medium text-stone tracking-wide hover:text-dune transition">by The Bored Room</a>
             </a>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
                 <button id="authBtn" onclick="showAuth()" class="text-dune hover:text-obsidian transition text-sm font-medium">Sign Up / Log In</button>
-                <span id="authUser" class="hidden text-sm text-ash"></span>
-                <button onclick="showSettings()" class="text-ash hover:text-obsidian transition text-sm flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Settings
-                </button>
-                <div id="creditBadge" class="text-xs bg-cream px-2.5 py-1 rounded-lg text-ash hidden">
-                    <span id="creditCount">--</span> credits
+                <div id="userNav" class="hidden flex items-center gap-3">
+                    <div id="usageBadge" class="text-xs bg-cream border border-rule px-2.5 py-1 rounded-full text-ash">
+                        <span id="usageCount">0</span> / <span id="usageLimit">100</span> this month
+                    </div>
+                    <span id="authUser" class="text-sm text-ash"></span>
+                    <button onclick="showSettings()" class="text-ash hover:text-obsidian transition" title="Settings">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button onclick="doLogout()" class="text-stone hover:text-obsidian transition text-xs">Log out</button>
                 </div>
             </div>
         </div>
@@ -1204,12 +1206,38 @@
     function updateAuthUI() {
         const email = STATE.settings.userEmail;
         const btn = document.getElementById('authBtn');
+        const nav = document.getElementById('userNav');
         const user = document.getElementById('authUser');
         if (email) {
             btn.classList.add('hidden');
-            user.classList.remove('hidden');
+            nav.classList.remove('hidden');
             user.textContent = email;
+            loadUsage();
         }
+    }
+
+    async function loadUsage() {
+        const key = getApiKey();
+        if (!key) return;
+        try {
+            const resp = await fetch(getEndpoint() + '/auth/me?api_key=' + key);
+            if (resp.ok) {
+                const data = await resp.json();
+                document.getElementById('usageCount').textContent = data.monthly_calls;
+                document.getElementById('usageLimit').textContent = data.monthly_limit;
+            }
+        } catch {}
+    }
+
+    function doLogout() {
+        delete STATE.settings.apiKey;
+        delete STATE.settings.userEmail;
+        delete STATE.settings.userTier;
+        localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+        document.getElementById('authGate').classList.remove('hidden');
+        document.getElementById('appMain').classList.add('hidden');
+        document.getElementById('authBtn').classList.remove('hidden');
+        document.getElementById('userNav').classList.add('hidden');
     }
 
     // --- Auth Gate ---
