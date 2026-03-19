@@ -439,30 +439,120 @@
 
     async function handleFiles(files) {
         if (!files.length) return;
-        if (files.length === 1) {
-            await analyzeSingleFile(files[0]);
-        } else {
-            await analyzeBatch(files);
+        // Queue all files for background processing
+        for (const file of files) {
+            queueAnalysis(file);
         }
     }
 
-    // --- Single File Analysis ---
-    async function analyzeSingleFile(file) {
-        showLoading(`Analyzing ${file.name}...`);
+    // --- Background Processing Queue ---
+    const QUEUE = { items: [], active: 0, maxConcurrent: 3 };
+
+    function queueAnalysis(file) {
+        const id = Date.now() + Math.random();
+        const item = { id, file, filename: file.name, status: 'queued', result: null };
+        QUEUE.items.unshift(item);
+        renderQueue();
+        processQueue();
+    }
+
+    async function processQueue() {
+        if (QUEUE.active >= QUEUE.maxConcurrent) return;
+        const next = QUEUE.items.find(i => i.status === 'queued');
+        if (!next) return;
+
+        next.status = 'analyzing';
+        QUEUE.active++;
+        renderQueue();
+
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', next.file);
         formData.append('brand_name', getBrand());
 
         try {
             const data = await callApi('/analyze', formData);
-            hideLoading();
-            STATE.results = [{ filename: file.name, ...data }];
-            renderSingleResult(data, file.name);
-            addToHistory(data, file.name);
+            next.status = 'done';
+            next.result = data;
+            STATE.results.push({ filename: next.filename, ...data });
+            addToHistory(data, next.filename);
         } catch (err) {
-            hideLoading();
-            showToast('Analysis failed: ' + err.message, 'error');
+            next.status = 'error';
+            next.error = err.message;
         }
+
+        QUEUE.active--;
+        renderQueue();
+        processQueue(); // Process next in queue
+    }
+
+    function renderQueue() {
+        const list = document.getElementById('historyList');
+        const queueItems = QUEUE.items.filter(i => i.status !== 'done' || Date.now() - i.id < 60000);
+
+        // Build queue section + history
+        let html = '';
+
+        // Active queue
+        const active = QUEUE.items.filter(i => i.status !== 'done');
+        if (active.length) {
+            html += `<div class="mb-4">`;
+            html += active.map(item => {
+                const statusIcon = item.status === 'analyzing'
+                    ? `<div class="w-2 h-2 rounded-full bg-dune animate-pulse"></div>`
+                    : item.status === 'error'
+                    ? `<div class="w-2 h-2 rounded-full" style="background:#C0392B"></div>`
+                    : `<div class="w-2 h-2 rounded-full bg-stone"></div>`;
+                const statusText = item.status === 'analyzing' ? 'Analyzing'
+                    : item.status === 'error' ? 'Failed'
+                    : 'Queued';
+                return `<div class="bg-cream border border-rule rounded-lg p-3 mb-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(item.filename)}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${statusIcon}
+                            <span class="text-[10px] text-stone">${statusText}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            html += `</div>`;
+        }
+
+        // Recently completed (show result on click)
+        const done = QUEUE.items.filter(i => i.status === 'done').slice(0, 3);
+        done.forEach(item => {
+            if (item.result) {
+                const n = item.result.naming || {};
+                html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-dune transition mb-2" onclick='renderSingleResult(${JSON.stringify(item.result).replace(/'/g, "&#39;")}, "${escAttr(item.filename)}")'>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(item.filename)}</span>
+                        <span class="tag text-[11px]">${item.result.format || ''}</span>
+                    </div>
+                    ${n.default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(n.default)}</div>` : ''}
+                    <div class="text-[10px] text-stone mt-1">just now</div>
+                </div>`;
+            }
+        });
+
+        // Existing history
+        STATE.history.forEach(h => {
+            html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-dune transition mb-2" onclick="copyText('${escAttr(h.naming_default || '')}')">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(h.filename)}</span>
+                    <span class="tag text-[11px]">${h.format || ''}</span>
+                </div>
+                ${h.naming_default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
+                <div class="text-[10px] text-stone mt-1">${timeAgo(h.timestamp)}</div>
+            </div>`;
+        });
+
+        if (!html) html = '<p class="text-stone text-sm py-8 text-center">No analyses yet</p>';
+        list.innerHTML = html;
+    }
+
+    // Legacy single file (kept for URL analysis)
+    async function analyzeSingleFile(file) {
+        queueAnalysis(file);
     }
 
     // --- URL Analysis ---
@@ -495,53 +585,7 @@
         }
     }
 
-    // --- Batch Analysis ---
-    async function analyzeBatch(files) {
-        showLoading(`Analyzing ${files.length} files...`);
-        STATE.results = [];
-
-        // Check if all images (carousel) or individual files
-        const allImages = [...files].every(f => f.type.startsWith('image/'));
-
-        if (allImages && files.length > 1 && files.length <= 10) {
-            // Try as carousel first
-            const formData = new FormData();
-            for (const f of files) formData.append('files', f);
-            formData.append('brand_name', getBrand());
-            formData.append('format', 'carousel');
-
-            try {
-                const data = await callApi('/analyze', formData);
-                hideLoading();
-                STATE.results = [{ filename: `Carousel (${files.length} slides)`, ...data }];
-                renderSingleResult(data, `Carousel (${files.length} slides)`);
-                addToHistory(data, `Carousel (${files.length} slides)`);
-                return;
-            } catch {
-                // Fall through to individual analysis
-            }
-        }
-
-        // Analyze individually
-        const batchResults = [];
-        for (let i = 0; i < files.length; i++) {
-            document.getElementById('loadingText').textContent = `Analyzing ${i + 1} of ${files.length}...`;
-            const formData = new FormData();
-            formData.append('file', files[i]);
-            formData.append('brand_name', getBrand());
-            try {
-                const data = await callApi('/analyze', formData);
-                batchResults.push({ filename: files[i].name, ...data });
-            } catch {
-                batchResults.push({ filename: files[i].name, error: true });
-            }
-        }
-
-        hideLoading();
-        STATE.results = batchResults;
-        renderBatchResults(batchResults);
-        batchResults.filter(r => !r.error).forEach(r => addToHistory(r, r.filename));
-    }
+    // Batch analysis now handled by the queue — all files processed in background
 
     // --- API Call ---
     async function callApi(path, formData) {
@@ -1542,6 +1586,14 @@
         if (STATE.settings.airtableTable) document.getElementById('airtableTable').value = STATE.settings.airtableTable;
         if (STATE.settings.airtableField) document.getElementById('airtableField').value = STATE.settings.airtableField;
     }
+
+    // Warn before closing if uploads are active
+    window.addEventListener('beforeunload', (e) => {
+        if (QUEUE.items.some(i => i.status === 'queued' || i.status === 'analyzing')) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 
     init();
     checkAuthGate();
