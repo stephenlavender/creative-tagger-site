@@ -526,81 +526,109 @@
         const a = data.audio || {};
         const n = data.naming || {};
 
+        // Update usage
+        loadUsage();
+
         c.innerHTML = `
-        <div class="result-card space-y-6">
+        <div class="result-card space-y-5">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-bold text-xl">${escHtml(filename)}</h2>
-                    <div class="flex items-center gap-3 mt-1.5">
+                    <h2 class="font-semibold text-lg">${escHtml(filename)}</h2>
+                    <div class="flex items-center gap-2 mt-1">
                         <span class="tag">${data.format || 'video'}</span>
-                        <span class="text-stone text-xs">${data.processing_time_ms || 0}ms</span>
-                        <span class="text-stone text-xs">${data.model_used || ''}</span>
+                        ${v.aspect_ratio ? `<span class="text-stone text-xs">${v.aspect_ratio}</span>` : ''}
+                        ${v.duration_seconds ? `<span class="text-stone text-xs">${v.duration_seconds}s</span>` : ''}
+                        ${data.video_length_bucket ? `<span class="text-stone text-xs">${data.video_length_bucket}</span>` : ''}
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="exportCSV()" class="bg-cream hover:bg-dune-light border border-rule text-sm px-3 py-1.5 rounded-lg transition text-charcoal">CSV</button>
+                    <button onclick="exportCSV()" class="bg-cream hover:bg-dune-light border border-rule text-xs px-3 py-1.5 rounded-lg transition text-charcoal">CSV</button>
+                    <button onclick="exportGoogleSheets()" class="bg-cream hover:bg-dune-light border border-rule text-xs px-3 py-1.5 rounded-lg transition text-charcoal">Sheets</button>
                 </div>
             </div>
 
-            <!-- Naming Conventions -->
+            <!-- Naming — most important, copy-friendly -->
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Naming Conventions</h3>
                 ${n.default ? namingRow('Default', n.default) : ''}
                 ${n.compact ? namingRow('Compact', n.compact) : ''}
-                ${n.extended ? namingRow('Extended', n.extended) : ''}
-                ${n.visual_only ? namingRow('Visual Only', n.visual_only) : ''}
+                ${n.custom ? namingRow('Custom', n.custom) : ''}
             </div>
 
-            <!-- Visual Attributes -->
+            <!-- Creative Strategy — what media buyers care about most -->
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Visual Attributes</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <h3 class="eyebrow mb-3">Creative Strategy</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${attrCell('Hook Type', v.hook_type)}
-                    ${attrCell('Visual Style', v.visual_style)}
-                    ${attrCell('Talent', v.talent_type)}
+                    ${attrCell('Hook Style', data.hook_style)}
+                    ${attrCell('Messaging Angle', data.messaging_angle)}
+                    ${attrCell('Creative Type', data.creative_type)}
                     ${attrCell('CTA', v.cta_type)}
+                    ${attrCell('CTA Placement', data.cta_placement)}
                     ${attrCell('Emotion', v.primary_emotion)}
-                    ${attrCell('Aspect Ratio', v.aspect_ratio)}
-                    ${v.duration_seconds ? attrCell('Duration', v.duration_seconds + 's') : ''}
+                    ${attrCell('Offer', data.offer_type)}
+                    ${data.offer_detail ? attrCell('Offer Detail', data.offer_detail) : ''}
                 </div>
             </div>
 
-            <!-- Audio (if present) -->
+            <!-- Production & Visual -->
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Production & Visual</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    ${attrCell('Visual Style', v.visual_style)}
+                    ${attrCell('Production', data.production_type)}
+                    ${attrCell('Talent', v.talent_type)}
+                    ${attrCell('Product Presence', data.product_presence)}
+                    ${attrCell('Brand Presence', data.brand_presence)}
+                    ${attrCell('Text Overlay', data.text_overlay_treatment)}
+                    ${attrCell('Seasonality', data.seasonality)}
+                    ${attrCell('Headline Style', data.headline_style)}
+                </div>
+                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-3"><span class="text-stone text-xs">Colors:</span>${data.dominant_colors.map(c => `<div class="w-5 h-5 rounded-full border border-rule" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
+            </div>
+
+            <!-- Social Proof -->
+            ${data.social_proof_elements && data.social_proof_elements.length && data.social_proof_elements[0] !== 'NoProof' ? `
+            <div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Social Proof</h3>
+                <div class="flex flex-wrap gap-1.5">
+                    ${data.social_proof_elements.map(s => `<span class="tag">${s}</span>`).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Audio -->
             ${a.audio_type ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Audio Attributes</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${attrCell('Audio Type', a.audio_type)}
-                    ${a.music_style ? attrCell('Music Style', a.music_style) : ''}
+                <h3 class="eyebrow mb-3">Audio</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    ${attrCell('Type', a.audio_type)}
+                    ${a.music_style ? attrCell('Music', a.music_style) : ''}
                     ${a.vo_tone ? attrCell('VO Tone', a.vo_tone) : ''}
-                    ${a.vo_pacing ? attrCell('VO Pacing', a.vo_pacing) : ''}
-                    ${a.vo_gender ? attrCell('VO Gender', a.vo_gender) : ''}
                     ${data.audio_shortcode ? attrCell('Shortcode', data.audio_shortcode) : ''}
                 </div>
             </div>` : ''}
 
-            <!-- Image-specific -->
+            <!-- Text overlay content -->
             ${data.text_overlay_content ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Image Details</h3>
-                <div class="text-sm text-charcoal mb-2"><span class="text-stone">Text Overlay:</span> ${escHtml(data.text_overlay_content)}</div>
-                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-2"><span class="text-stone text-sm">Colors:</span>${data.dominant_colors.map(c => `<div class="w-6 h-6 rounded" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
+                <h3 class="eyebrow mb-2">Text on Creative</h3>
+                <p class="text-sm text-charcoal leading-relaxed">${escHtml(data.text_overlay_content)}</p>
             </div>` : ''}
 
             <!-- Carousel slides -->
             ${data.slides ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Carousel — ${data.slide_count} Slides ${data.carousel_arc ? `<span class="tag ml-2">${data.carousel_arc}</span>` : ''} ${data.coherence_score ? `<span class="text-stone ml-2">${Math.round(data.coherence_score * 100)}% coherence</span>` : ''}</h3>
+                <h3 class="eyebrow mb-3">Carousel &middot; ${data.slide_count} Slides ${data.carousel_arc ? `&middot; <span class="text-obsidian">${data.carousel_arc}</span>` : ''} ${data.coherence_score ? `&middot; ${Math.round(data.coherence_score * 100)}% coherence` : ''}</h3>
                 <div class="space-y-2">
                     ${data.slides.map(s => `
-                    <div class="flex items-center gap-3 py-2 border-b border-rule last:border-0">
-                        <span class="text-stone text-xs w-6">S${s.slide_number}</span>
+                    <div class="flex items-center gap-2 py-2 border-b border-rule/50 last:border-0">
+                        <span class="text-stone text-xs w-5 font-mono">${s.slide_number}</span>
                         <span class="tag">${s.hook_type}</span>
                         <span class="tag">${s.visual_style}</span>
                         <span class="tag">${s.cta_type}</span>
                         <span class="tag">${s.primary_emotion}</span>
-                        ${s.text_overlay_content ? `<span class="text-stone text-xs truncate max-w-[200px]">"${escHtml(s.text_overlay_content)}"</span>` : ''}
+                        ${s.text_overlay_content ? `<span class="text-stone text-xs truncate max-w-[180px]">${escHtml(s.text_overlay_content)}</span>` : ''}
                     </div>`).join('')}
                 </div>
             </div>` : ''}
@@ -608,22 +636,21 @@
             <!-- Chapters (long-form) -->
             ${data.chapters ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Chapters ${data.content_structure ? `<span class="tag ml-2">${data.content_structure}</span>` : ''} ${data.pacing_pattern ? `<span class="tag ml-2">${data.pacing_pattern}</span>` : ''}</h3>
+                <h3 class="eyebrow mb-3">Chapters ${data.content_structure ? `&middot; <span class="text-obsidian">${data.content_structure}</span>` : ''} ${data.pacing_pattern ? `&middot; <span class="text-obsidian">${data.pacing_pattern}</span>` : ''}</h3>
                 <div class="space-y-1">
                     ${data.chapters.map(ch => `
                     <div class="flex items-center gap-3 py-1.5 text-sm">
                         <span class="text-stone font-mono text-xs">${formatTime(ch.start)}</span>
                         <span class="text-charcoal">${escHtml(ch.title)}</span>
-                        ${ch.summary ? `<span class="text-stone text-xs">${escHtml(ch.summary)}</span>` : ''}
                     </div>`).join('')}
                 </div>
             </div>` : ''}
 
-            <!-- Landing page / Email specific -->
+            <!-- Landing page -->
             ${data.visual_hierarchy ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Landing Page</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${attrCell('Hierarchy', data.visual_hierarchy)}
                     ${attrCell('Copy Tone', data.copy_tone)}
                     ${attrCell('Form', data.form_complexity)}
@@ -632,10 +659,11 @@
                 ${data.cta_texts ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.cta_texts.map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
             </div>` : ''}
 
+            <!-- Email -->
             ${data.email_structure ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Email</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${attrCell('Structure', data.email_structure)}
                     ${attrCell('Density', data.visual_density)}
                     ${attrCell('CTA Clarity', data.cta_clarity)}
@@ -647,10 +675,12 @@
             <!-- Transcript -->
             ${data.transcript ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
-                <h3 class="eyebrow mb-3">Transcript</h3>
+                <h3 class="eyebrow mb-2">Transcript</h3>
                 <p class="text-sm text-ash leading-relaxed">${escHtml(data.transcript.full_text)}</p>
                 ${data.transcript.key_phrases?.length ? `<div class="mt-3 flex flex-wrap gap-1.5">${data.transcript.key_phrases.map(p => `<span class="tag tag-muted">${escHtml(p)}</span>`).join('')}</div>` : ''}
             </div>` : ''}
+
+            <div class="text-xs text-stone text-right">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''}</div>
         </div>`;
     }
 
