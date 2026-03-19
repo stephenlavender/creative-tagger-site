@@ -160,6 +160,7 @@
                             <th class="pb-2 pr-2 font-medium text-ash text-xs">Emotion</th>
                             <th class="pb-2 pr-2 font-medium text-ash text-xs">Date</th>
                             <th class="pb-2 font-medium text-ash text-xs">Ad Name</th>
+                            <th class="pb-2 font-medium text-ash text-xs"></th>
                         </tr>
                     </thead>
                     <tbody id="libraryTableBody"></tbody>
@@ -376,6 +377,17 @@
         </div><!-- /appTab-analyze -->
     </main>
 
+    <!-- Library Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-start justify-center pt-16 bg-obsidian/40 backdrop-blur-sm overflow-y-auto" onclick="if(event.target===this)closeDetail()">
+        <div class="bg-parchment border border-rule rounded-2xl w-full max-w-3xl mb-16 shadow-lg">
+            <div class="flex items-center justify-between p-5 border-b border-rule">
+                <h2 class="font-semibold text-lg" id="detailTitle">Creative Detail</h2>
+                <button onclick="closeDetail()" class="text-stone hover:text-obsidian transition text-lg">&times;</button>
+            </div>
+            <div id="detailBody" class="p-5"></div>
+        </div>
+    </div>
+
     <!-- Auth Modal -->
     <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideAuth()">
         <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
@@ -484,10 +496,56 @@
 
     function queueAnalysis(file) {
         const id = Date.now() + Math.random();
-        const item = { id, file, filename: file.name, status: 'queued', result: null };
+        const item = { id, file, filename: file.name, status: 'queued', result: null, thumb: null };
+        // Generate thumbnail
+        generateThumb(file).then(thumb => { item.thumb = thumb; });
         QUEUE.items.unshift(item);
         renderQueue();
         processQueue();
+    }
+
+    function generateThumb(file) {
+        return new Promise(resolve => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const c = document.createElement('canvas');
+                        const size = 80;
+                        c.width = size; c.height = size;
+                        const ctx = c.getContext('2d');
+                        const scale = Math.max(size / img.width, size / img.height);
+                        const w = img.width * scale, h = img.height * scale;
+                        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+                        resolve(c.toDataURL('image/jpeg', 0.6));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.muted = true;
+                video.onloadeddata = () => {
+                    video.currentTime = 1;
+                };
+                video.onseeked = () => {
+                    const c = document.createElement('canvas');
+                    const size = 80;
+                    c.width = size; c.height = size;
+                    const ctx = c.getContext('2d');
+                    const scale = Math.max(size / video.videoWidth, size / video.videoHeight);
+                    const w = video.videoWidth * scale, h = video.videoHeight * scale;
+                    ctx.drawImage(video, (size - w) / 2, (size - h) / 2, w, h);
+                    resolve(c.toDataURL('image/jpeg', 0.6));
+                    URL.revokeObjectURL(video.src);
+                };
+                video.src = URL.createObjectURL(file);
+            } else {
+                resolve(null);
+            }
+        });
     }
 
     async function processQueue() {
@@ -1531,6 +1589,9 @@
                             </button>
                         </div>
                     </td>
+                    <td class="py-2 pl-2">
+                        <button onclick="viewLibraryItem(${item.id})" class="text-dune hover:text-obsidian transition text-[10px]">View</button>
+                    </td>
                 </tr>
             `).join('');
         } catch (e) {
@@ -1557,11 +1618,107 @@
         try {
             const resp = await fetch(getEndpoint() + `/auth/library/${id}?api_key=${key}`);
             const data = await resp.json();
-            switchAppTab('analyze');
-            renderSingleResult(data, data.naming?.default || 'Library item');
+            showDetailModal(data);
         } catch (e) {
             showToast('Failed to load', 'error');
         }
+    }
+
+    function showDetailModal(data) {
+        const v = data.visual || {};
+        const a = data.audio || {};
+        const n = data.naming || {};
+        document.getElementById('detailTitle').textContent = n.default || data.format || 'Creative Detail';
+        const body = document.getElementById('detailBody');
+
+        body.innerHTML = `
+        <div class="space-y-4">
+            <!-- Naming -->
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Naming Conventions</h3>
+                ${n.default ? `<div class="flex items-center justify-between py-1.5 border-b border-rule/50 group">
+                    <div><span class="text-stone text-xs">Default</span><div class="font-mono text-sm text-obsidian/80">${escHtml(n.default)}</div></div>
+                    <button onclick="copyText('${escAttr(n.default)}')" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal p-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                </div>` : ''}
+                ${n.compact ? `<div class="flex items-center justify-between py-1.5 group">
+                    <div><span class="text-stone text-xs">Compact</span><div class="font-mono text-sm text-obsidian/80">${escHtml(n.compact)}</div></div>
+                    <button onclick="copyText('${escAttr(n.compact)}')" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal p-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                </div>` : ''}
+            </div>
+
+            <!-- Strategy -->
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Creative Strategy</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${attrCell('Hook', v.hook_type)}
+                    ${attrCell('Hook Style', data.hook_style)}
+                    ${attrCell('Angle', data.messaging_angle)}
+                    ${attrCell('Type', data.creative_type)}
+                    ${attrCell('CTA', v.cta_type)}
+                    ${attrCell('Placement', data.cta_placement)}
+                    ${attrCell('Emotion', v.primary_emotion)}
+                    ${attrCell('Offer', data.offer_type)}
+                </div>
+            </div>
+
+            <!-- Production -->
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Production</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${attrCell('Style', v.visual_style)}
+                    ${attrCell('Production', data.production_type)}
+                    ${attrCell('Talent', v.talent_type)}
+                    ${attrCell('Product', data.product_presence)}
+                    ${attrCell('Brand', data.brand_presence)}
+                    ${attrCell('Text', data.text_overlay_treatment)}
+                    ${attrCell('Season', data.seasonality)}
+                    ${v.aspect_ratio ? attrCell('Ratio', v.aspect_ratio) : ''}
+                </div>
+            </div>
+
+            <!-- Audio -->
+            ${a.audio_type ? `
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Audio</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${attrCell('Type', a.audio_type)}
+                    ${a.music_style ? attrCell('Music', a.music_style) : ''}
+                    ${a.vo_tone ? attrCell('VO', a.vo_tone) : ''}
+                    ${data.audio_shortcode ? attrCell('Code', data.audio_shortcode) : ''}
+                </div>
+            </div>` : ''}
+
+            <!-- Text on creative -->
+            ${data.text_overlay_content ? `
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Text on Creative</h3>
+                <p class="text-sm text-charcoal">${escHtml(data.text_overlay_content)}</p>
+            </div>` : ''}
+
+            <!-- Transcript -->
+            ${data.transcript ? `
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Transcript</h3>
+                <p class="text-sm text-ash leading-relaxed">${escHtml(data.transcript.full_text)}</p>
+                ${data.transcript.key_phrases?.length ? `<div class="mt-2 flex flex-wrap gap-1">${data.transcript.key_phrases.map(p => `<span class="tag tag-muted text-[10px]">${escHtml(p)}</span>`).join('')}</div>` : ''}
+            </div>` : ''}
+
+            <!-- Social Proof -->
+            ${data.social_proof_elements?.length && data.social_proof_elements[0] !== 'NoProof' ? `
+            <div class="bg-cream border border-rule rounded-xl p-4">
+                <h3 class="eyebrow mb-2">Social Proof</h3>
+                <div class="flex flex-wrap gap-1">${data.social_proof_elements.map(s => `<span class="tag text-[11px]">${s}</span>`).join('')}</div>
+            </div>` : ''}
+
+            <div class="text-xs text-stone text-right">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</div>
+        </div>`;
+
+        document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetail() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
     }
 
     // --- Patterns ---
