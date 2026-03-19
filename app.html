@@ -78,7 +78,31 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Auth Gate -->
+    <div id="authGate" class="max-w-md mx-auto mt-24 text-center px-6">
+        <h1 class="font-display text-4xl font-normal mb-3">Creative Tagger</h1>
+        <p class="text-ash mb-8">Classify any ad creative across 28 dimensions. Sign up free.</p>
+        <div id="gateSignup">
+            <div class="space-y-3 text-left">
+                <input type="email" id="gateEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                <input type="password" id="gatePassword" placeholder="Password (min 8 characters)" class="w-full bg-cream border border-rule rounded-lg px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+            </div>
+            <button onclick="doGateSignup()" class="w-full bg-obsidian hover:bg-charcoal text-parchment font-medium py-3 rounded-xl text-sm transition mt-4">Sign Up</button>
+            <p class="text-sm text-stone mt-4">Already have an account? <button onclick="toggleGateMode()" class="text-dune hover:text-obsidian transition">Log in</button></p>
+        </div>
+        <div id="gateLogin" class="hidden">
+            <div class="space-y-3 text-left">
+                <input type="email" id="gateLoginEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                <input type="password" id="gateLoginPassword" placeholder="Password" class="w-full bg-cream border border-rule rounded-lg px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+            </div>
+            <button onclick="doGateLogin()" class="w-full bg-obsidian hover:bg-charcoal text-parchment font-medium py-3 rounded-xl text-sm transition mt-4">Log In</button>
+            <p class="text-sm text-stone mt-4">Need an account? <button onclick="toggleGateMode()" class="text-dune hover:text-obsidian transition">Sign up</button></p>
+        </div>
+        <div id="gateError" class="hidden text-sm mt-3" style="color:#C0392B"></div>
+        <p class="text-xs text-stone mt-6">Developer? <a href="https://api.creativetagger.ai/docs" class="text-dune hover:text-obsidian transition">Use the API directly</a></p>
+    </div>
+
+    <main id="appMain" class="hidden max-w-7xl mx-auto px-6 py-8">
         <div class="grid lg:grid-cols-[1fr_340px] gap-8">
 
             <!-- Main Column -->
@@ -1188,6 +1212,85 @@
         }
     }
 
+    // --- Auth Gate ---
+    function checkAuthGate() {
+        if (STATE.settings.apiKey && STATE.settings.userEmail) {
+            document.getElementById('authGate').classList.add('hidden');
+            document.getElementById('appMain').classList.remove('hidden');
+        }
+    }
+
+    function toggleGateMode() {
+        document.getElementById('gateSignup').classList.toggle('hidden');
+        document.getElementById('gateLogin').classList.toggle('hidden');
+        document.getElementById('gateError').classList.add('hidden');
+    }
+
+    function showGateError(msg) {
+        const el = document.getElementById('gateError');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    async function doGateSignup() {
+        const email = document.getElementById('gateEmail').value.trim();
+        const password = document.getElementById('gatePassword').value;
+        if (!email || password.length < 8) {
+            showGateError('Email required, password must be 8+ characters');
+            return;
+        }
+        try {
+            const resp = await fetch(getEndpoint() + '/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showGateError(data.detail || 'Signup failed'); return; }
+            STATE.settings.apiKey = data.api_key;
+            STATE.settings.userEmail = data.email;
+            STATE.settings.userTier = data.tier;
+            localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+            checkAuthGate();
+            updateAuthUI();
+            showToast('Welcome! Your account is ready.');
+        } catch (e) {
+            showGateError('Connection failed');
+        }
+    }
+
+    async function doGateLogin() {
+        const email = document.getElementById('gateLoginEmail').value.trim();
+        const password = document.getElementById('gateLoginPassword').value;
+        try {
+            const resp = await fetch(getEndpoint() + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await resp.json();
+            if (!resp.ok) { showGateError(data.detail || 'Login failed'); return; }
+            if (data.api_key) STATE.settings.apiKey = data.api_key;
+            STATE.settings.userEmail = data.email;
+            STATE.settings.userTier = data.tier;
+            localStorage.setItem('ct_settings', JSON.stringify(STATE.settings));
+            checkAuthGate();
+            updateAuthUI();
+            showToast('Welcome back, ' + data.email);
+        } catch (e) {
+            showGateError('Connection failed');
+        }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        if (document.getElementById('gateEmail') === document.activeElement ||
+            document.getElementById('gatePassword') === document.activeElement) doGateSignup();
+        if (document.getElementById('gateLoginEmail') === document.activeElement ||
+            document.getElementById('gateLoginPassword') === document.activeElement) doGateLogin();
+    });
+
     // --- Restore saved integration credentials ---
     function restoreIntegrationSettings() {
         if (STATE.settings.gdriveClientId) document.getElementById('gdriveClientId').value = STATE.settings.gdriveClientId;
@@ -1199,6 +1302,7 @@
     }
 
     init();
+    checkAuthGate();
     restoreIntegrationSettings();
     updateAuthUI();
     </script>
