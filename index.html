@@ -105,17 +105,17 @@
                     <div class="code-block rounded-xl p-5 font-mono text-[13px] leading-relaxed overflow-x-auto text-stone">
                         <div>{</div>
                         <div class="pl-4"><span class="key">"format"</span>: <span class="string">"video"</span>,</div>
-                        <div class="pl-4"><span class="key">"visual"</span>: {</div>
-                        <div class="pl-8"><span class="key">"hook_type"</span>: <span class="string">"UGC"</span>,</div>
-                        <div class="pl-8"><span class="key">"visual_style"</span>: <span class="string">"LoFi"</span>,</div>
-                        <div class="pl-8"><span class="key">"talent_type"</span>: <span class="string">"Creator"</span>,</div>
-                        <div class="pl-8"><span class="key">"cta_type"</span>: <span class="string">"ShopNow"</span>,</div>
-                        <div class="pl-8"><span class="key">"primary_emotion"</span>: <span class="string">"Curious"</span></div>
+                        <div class="pl-4"><span class="key">"attributes"</span>: {</div>
+                        <div class="pl-8"><span class="key">"asset_type"</span>: <span class="string">"UGC"</span>,</div>
+                        <div class="pl-8"><span class="key">"visual_format"</span>: <span class="string">"Talking Head"</span>,</div>
+                        <div class="pl-8"><span class="key">"hook_type"</span>: <span class="string">"Question"</span>,</div>
+                        <div class="pl-8"><span class="key">"talent"</span>: <span class="string">"Creator"</span>,</div>
+                        <div class="pl-8"><span class="key">"audience"</span>: <span class="string">"Wellness Seekers"</span>,</div>
+                        <div class="pl-8"><span class="key">"emotion"</span>: <span class="string">"Curiosity"</span></div>
                         <div class="pl-4">},</div>
-                        <div class="pl-4"><span class="key">"audio_shortcode"</span>: <span class="string">"VOMus-Pop-Conv"</span>,</div>
                         <div class="pl-4"><span class="key">"naming"</span>: {</div>
-                        <div class="pl-8"><span class="key">"default"</span>: <span class="string">"BRAND_UGC_Creator_LoFi_</span></div>
-                        <div class="pl-12"><span class="string">VOMus-Pop-Conv_ShopNow_9x16_30s_V1"</span></div>
+                        <div class="pl-8"><span class="key">"standard"</span>: <span class="string">"BRAND_UGC_</span></div>
+                        <div class="pl-12"><span class="string">TalkingHead_Creator_Question_ShopNow_9x16_V1"</span></div>
                         <div class="pl-4">}</div>
                         <div>}</div>
                     </div>
@@ -213,7 +213,7 @@
                 <div>
                     <h2 class="font-display text-4xl md:text-5xl font-normal mb-4">The taxonomy is the product</h2>
                     <p class="text-ash text-lg leading-relaxed mb-8">
-                        28 dimensions. 18 hook types. 20 messaging angles. 24 creative archetypes. 15 emotions. All designed by performance marketers who name 500+ creatives a week.
+                        every dimension. Human-readable values. 15 hook techniques. Dynamic audience targeting. 21 visual formats. Designed by performance marketers who name 500+ creatives a week.
                     </p>
                     <div class="space-y-4">
                         <div class="flex items-start gap-3">
@@ -246,27 +246,25 @@
                     </div>
                 </div>
                 <div class="code-block rounded-xl p-6 font-mono text-sm text-stone">
-                    <div class="comment text-xs mb-3">// 28-dimension taxonomy</div>
+                    <div class="comment text-xs mb-3">// taxonomy v2 — human-readable</div>
                     <div class="space-y-1">
-                        <div><span class="key">hook_type</span>  <span class="text-charcoal/30">&#8594;</span> <span class="string">UGC ProdShot Testi ProbAg BA Demo</span></div>
-                        <div class="pl-14"><span class="string">Unbox Life TalkHead TextOvr Mashup</span></div>
-                        <div class="pl-14"><span class="string">SocProof Founder Compare Tutorial</span></div>
-                        <div class="pl-14"><span class="string">Meme StopScrl Other</span></div>
+                        <div><span class="key">asset_type</span> <span class="text-charcoal/30">&#8594;</span> <span class="string">UGC  Lifestyle  Product Shot</span></div>
+                        <div class="pl-14"><span class="string">Studio  High Production  AI Generated</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">messaging</span>  <span class="text-charcoal/30">&#8594;</span> <span class="string">ProbSol BeforeAfter SocProof Aspire</span></div>
-                        <div class="pl-14"><span class="string">Edu Compare Scarcity ValuePrice</span></div>
-                        <div class="pl-14"><span class="string">MythBust BTS Community Guarantee</span></div>
+                        <div><span class="key">hook_type</span>  <span class="text-charcoal/30">&#8594;</span> <span class="string">Question  Bold Claim  Callout</span></div>
+                        <div class="pl-14"><span class="string">Curiosity Gap  Pain Point  Contrarian</span></div>
+                        <div class="pl-14"><span class="string">Transformation  Pattern Interrupt</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">creative</span>   <span class="text-charcoal/30">&#8594;</span> <span class="string">Testimonial ProdDemo Lifestyle GRWM</span></div>
-                        <div class="pl-14"><span class="string">DayInLife Skit Advertorial Mashup</span></div>
+                        <div><span class="key">format</span>     <span class="text-charcoal/30">&#8594;</span> <span class="string">Talking Head  Testimonial  Demo</span></div>
+                        <div class="pl-14"><span class="string">Before After  Unboxing  Founder Story</span></div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <div><span class="key">emotion</span>    <span class="text-charcoal/30">&#8594;</span> <span class="string">Urgent Curious Trust Fear Desire</span></div>
+                        <div><span class="key">emotion</span>    <span class="text-charcoal/30">&#8594;</span> <span class="string">Urgency  Curiosity  Trust  Desire</span></div>
                         <div class="pl-14"><span class="string">Humor Aspire Empower Nostalgic</span></div>
                     </div>
-                    <div class="mt-4 comment text-xs">// + offer, social proof, brand, production, audio...</div>
+                    <div class="mt-4 comment text-xs">// + audience, messaging angle, offer, audio, seasonality...</div>
                 </div>
             </div>
         </div>
@@ -309,7 +307,7 @@
                     <div class="text-4xl font-bold font-display mb-1">$0</div>
                     <div class="text-stone text-sm mb-6">100 calls/month, then PAYG</div>
                     <ul class="space-y-3 text-sm text-ash mb-8">
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> All 6 formats, 28 dimensions</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> All 6 formats, every dimension</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> No credit card required</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> MCP server + Python SDK</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.05–$0.25/call after free tier</li>
@@ -388,7 +386,7 @@
     <section class="py-24 px-6 border-t border-rule">
         <div class="max-w-3xl mx-auto text-center">
             <h2 class="font-display text-4xl md:text-6xl font-normal mb-6">Stop naming creatives<br><em class="italic">by hand</em></h2>
-            <p class="text-ash text-lg mb-10 max-w-xl mx-auto">Classify, name, and analyze every creative automatically. 28 dimensions. One API call.</p>
+            <p class="text-ash text-lg mb-10 max-w-xl mx-auto">Classify, name, and analyze every creative automatically. every dimension. One API call.</p>
             <a href="https://app.creativetagger.ai" class="inline-block bg-obsidian hover:bg-charcoal text-parchment font-semibold px-10 py-4 rounded-xl text-lg transition">
                 Start Free
             </a>
