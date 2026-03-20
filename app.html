@@ -615,7 +615,7 @@
                         <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(item.filename)}</span>
                         <span class="tag text-[11px]">${item.result.format || ''}</span>
                     </div>
-                    ${n.default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(n.default)}</div>` : ''}
+                    ${n.standard ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(n.standard)}</div>` : ''}
                     <div class="text-[10px] text-stone mt-1">just now</div>
                 </div>`;
             }
@@ -712,8 +712,8 @@
     function renderSingleResult(data, filename) {
         const c = document.getElementById('resultsContainer');
         document.getElementById('batchContainer').classList.add('hidden');
-        const v = data.visual || {};
-        const a = data.audio || {};
+        const v = data.attributes || {};
+        const a = data.attributes || {};
         const n = data.naming || {};
 
         // Update usage
@@ -729,7 +729,7 @@
                         <span class="tag">${data.format || 'video'}</span>
                         ${v.aspect_ratio ? `<span class="text-stone text-xs">${v.aspect_ratio}</span>` : ''}
                         ${v.duration_seconds ? `<span class="text-stone text-xs">${v.duration_seconds}s</span>` : ''}
-                        ${data.video_length_bucket ? `<span class="text-stone text-xs">${data.video_length_bucket}</span>` : ''}
+                        ${v.duration ? `<span class="text-stone text-xs">${v.duration}</span>` : ''}
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -741,7 +741,7 @@
             <!-- Naming — most important, copy-friendly -->
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Naming Conventions</h3>
-                ${n.default ? namingRow('Default', n.default) : ''}
+                ${n.standard ? namingRow('Default', n.standard) : ''}
                 ${n.compact ? namingRow('Compact', n.compact) : ''}
                 ${n.custom ? namingRow('Custom', n.custom) : ''}
             </div>
@@ -751,14 +751,14 @@
                 <h3 class="eyebrow mb-3">Creative Strategy</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${attrCell('Hook Type', v.hook_type)}
-                    ${attrCell('Hook Style', data.hook_style)}
-                    ${attrCell('Messaging Angle', data.messaging_angle)}
-                    ${attrCell('Creative Type', data.creative_type)}
-                    ${attrCell('CTA', v.cta_type)}
-                    ${attrCell('CTA Placement', data.cta_placement)}
-                    ${attrCell('Emotion', v.primary_emotion)}
-                    ${attrCell('Offer', data.offer_type)}
-                    ${data.offer_detail ? attrCell('Offer Detail', data.offer_detail) : ''}
+                    ${attrCell('Hook Style', v.hook_style)}
+                    ${attrCell('Messaging Angle', v.messaging_angle)}
+                    ${attrCell('Visual Format', v.visual_format)}
+                    ${attrCell('CTA', v.cta)}
+                    ${attrCell('CTA Placement', v.cta_placement)}
+                    ${attrCell('Emotion', v.emotion)}
+                    ${attrCell('Offer', v.offer_type)}
+                    ${v.offer_detail ? attrCell('Offer Detail', v.offer_detail) : ''}
                 </div>
             </div>
 
@@ -767,43 +767,43 @@
                 <h3 class="eyebrow mb-3">Production & Visual</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${attrCell('Visual Style', v.visual_style)}
-                    ${attrCell('Production', data.production_type)}
-                    ${attrCell('Talent', v.talent_type)}
-                    ${attrCell('Product Presence', data.product_presence)}
-                    ${attrCell('Brand Presence', data.brand_presence)}
-                    ${attrCell('Text Overlay', data.text_overlay_treatment)}
-                    ${attrCell('Seasonality', data.seasonality)}
-                    ${attrCell('Headline Style', data.headline_style)}
+                    ${attrCell('Asset Type', v.asset_type)}
+                    ${attrCell('Talent', v.talent)}
+                    ${attrCell('Product Presence', v.key_products)}
+                    ${attrCell('Brand Presence', v.audience)}
+                    ${attrCell('Text Overlay', v.text_overlay_content)}
+                    ${attrCell('Seasonality', v.seasonality)}
+                    ${attrCell('Headline Style', v.hook_text)}
                 </div>
-                ${data.dominant_colors ? `<div class="flex items-center gap-2 mt-3"><span class="text-stone text-xs">Colors:</span>${data.dominant_colors.map(c => `<div class="w-5 h-5 rounded-full border border-rule" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
+                ${v.colors_dominant ? `<div class="flex items-center gap-2 mt-3"><span class="text-stone text-xs">Colors:</span>${v.colors_dominant.map(c => `<div class="w-5 h-5 rounded-full border border-rule" style="background:${c}" title="${c}"></div>`).join('')}</div>` : ''}
             </div>
 
             <!-- Social Proof -->
-            ${data.social_proof_elements && data.social_proof_elements.length && data.social_proof_elements[0] !== 'NoProof' ? `
+            ${v.social_proof_elements && v.social_proof_elements.length && v.social_proof_elements[0] !== 'NoProof' ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Social Proof</h3>
                 <div class="flex flex-wrap gap-1.5">
-                    ${data.social_proof_elements.map(s => `<span class="tag">${s}</span>`).join('')}
+                    ${v.social_proof_elements.map(s => `<span class="tag">${s}</span>`).join('')}
                 </div>
             </div>` : ''}
 
             <!-- Audio -->
-            ${a.audio_type ? `
+            ${v.audio_type ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-3">Audio</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    ${attrCell('Type', a.audio_type)}
-                    ${a.music_style ? attrCell('Music', a.music_style) : ''}
-                    ${a.vo_tone ? attrCell('VO Tone', a.vo_tone) : ''}
-                    ${data.audio_shortcode ? attrCell('Shortcode', data.audio_shortcode) : ''}
+                    ${attrCell('Type', v.audio_type)}
+                    ${v.music_style ? attrCell('Music', v.music_style) : ''}
+                    ${v.voiceover_tone ? attrCell('VO Tone', v.voiceover_tone) : ''}
+                    ${v.audio_type ? attrCell('Shortcode', v.audio_type) : ''}
                 </div>
             </div>` : ''}
 
             <!-- Text overlay content -->
-            ${data.text_overlay_content ? `
+            ${v.text_overlay_content ? `
             <div class="bg-cream border border-rule rounded-xl p-5">
                 <h3 class="eyebrow mb-2">Text on Creative</h3>
-                <p class="text-sm text-charcoal leading-relaxed">${escHtml(data.text_overlay_content)}</p>
+                <p class="text-sm text-charcoal leading-relaxed">${escHtml(v.text_overlay_content)}</p>
             </div>` : ''}
 
             <!-- Carousel slides -->
@@ -899,16 +899,16 @@
         const tbody = document.getElementById('batchTableBody');
         tbody.innerHTML = results.map(r => {
             if (r.error) return `<tr class="border-b border-rule"><td class="py-3 pr-4 text-ash">${escHtml(r.filename)}</td><td colspan="6" class="py-3 text-red-400/60">Failed</td></tr>`;
-            const v = r.visual || {};
+            const v = r.attributes || {};
             const n = r.naming || {};
             return `<tr class="border-b border-rule hover:bg-cream">
                 <td class="py-3 pr-4 text-charcoal text-xs max-w-[120px] truncate">${escHtml(r.filename)}</td>
                 <td class="py-3 pr-4"><span class="tag">${r.format || ''}</span></td>
                 <td class="py-3 pr-4"><span class="tag">${v.hook_type || ''}</span></td>
                 <td class="py-3 pr-4"><span class="tag">${v.visual_style || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag">${v.cta_type || ''}</span></td>
-                <td class="py-3 pr-4"><span class="tag">${v.primary_emotion || ''}</span></td>
-                <td class="py-3 font-mono text-xs text-ash cursor-pointer hover:text-charcoal" onclick="copyText('${escAttr(n.default || '')}')">${escHtml(n.default || '')}</td>
+                <td class="py-3 pr-4"><span class="tag">${v.cta || ''}</span></td>
+                <td class="py-3 pr-4"><span class="tag">${v.emotion || ''}</span></td>
+                <td class="py-3 font-mono text-xs text-ash cursor-pointer hover:text-charcoal" onclick="copyText('${escAttr(n.standard || '')}')">${escHtml(n.standard || '')}</td>
             </tr>`;
         }).join('');
     }
@@ -919,8 +919,8 @@
             id: Date.now(),
             filename,
             format: data.format,
-            hook_type: data.visual?.hook_type,
-            naming_default: data.naming?.default,
+            hook_type: data.attributes?.hook_type,
+            naming_default: data.naming?.standard,
             timestamp: new Date().toISOString(),
         };
         STATE.history.unshift(entry);
@@ -955,12 +955,11 @@
     // --- Export ---
     function exportCSV() {
         if (!STATE.results.length) return showToast('No results to export', 'error');
-        const headers = ['Filename', 'Format', 'Hook Type', 'Visual Style', 'Talent', 'CTA', 'Emotion', 'Aspect Ratio', 'Duration', 'Audio Type', 'Audio Shortcode', 'Default Naming', 'Compact Naming'];
+        const headers = ['Filename', 'Format', 'Asset Type', 'Visual Format', 'Hook Type', 'Talent', 'Audience', 'Messaging Angle', 'CTA', 'Emotion', 'Offer', 'Audio Type', 'Standard Naming', 'Compact Naming'];
         const rows = STATE.results.filter(r => !r.error).map(r => {
-            const v = r.visual || {};
-            const a = r.audio || {};
+            const v = r.attributes || {};
             const n = r.naming || {};
-            return [r.filename, r.format, v.hook_type, v.visual_style, v.talent_type, v.cta_type, v.primary_emotion, v.aspect_ratio, v.duration_seconds || '', a.audio_type || '', r.audio_shortcode || '', n.default || '', n.compact || ''];
+            return [r.filename, r.format, v.asset_type, v.visual_format, v.hook_type, v.talent, v.audience, v.messaging_angle, v.cta, v.emotion, v.offer_type, v.audio_type, n.standard || '', n.compact || ''];
         });
         const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
         downloadFile(csv, 'creative-tagger-export.csv', 'text/csv');
@@ -968,7 +967,7 @@
     }
 
     function copyAllNaming() {
-        const names = STATE.results.filter(r => !r.error && r.naming?.default).map(r => r.naming.default).join('\n');
+        const names = STATE.results.filter(r => !r.error && r.naming?.standard).map(r => r.naming.standard).join('\n');
         copyText(names);
     }
 
@@ -1625,10 +1624,10 @@
     }
 
     function showDetailModal(data) {
-        const v = data.visual || {};
-        const a = data.audio || {};
+        const v = data.attributes || {};
+        const a = data.attributes || {};
         const n = data.naming || {};
-        document.getElementById('detailTitle').textContent = n.default || data.format || 'Creative Detail';
+        document.getElementById('detailTitle').textContent = n.standard || data.format || 'Creative Detail';
         const body = document.getElementById('detailBody');
 
         body.innerHTML = `
@@ -1636,9 +1635,9 @@
             <!-- Naming -->
             <div class="bg-cream border border-rule rounded-xl p-4">
                 <h3 class="eyebrow mb-2">Naming Conventions</h3>
-                ${n.default ? `<div class="flex items-center justify-between py-1.5 border-b border-rule/50 group">
-                    <div><span class="text-stone text-xs">Default</span><div class="font-mono text-sm text-obsidian/80">${escHtml(n.default)}</div></div>
-                    <button onclick="copyText('${escAttr(n.default)}')" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal p-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                ${n.standard ? `<div class="flex items-center justify-between py-1.5 border-b border-rule/50 group">
+                    <div><span class="text-stone text-xs">Default</span><div class="font-mono text-sm text-obsidian/80">${escHtml(n.standard)}</div></div>
+                    <button onclick="copyText('${escAttr(n.standard)}')" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal p-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
                 </div>` : ''}
                 ${n.compact ? `<div class="flex items-center justify-between py-1.5 group">
                     <div><span class="text-stone text-xs">Compact</span><div class="font-mono text-sm text-obsidian/80">${escHtml(n.compact)}</div></div>
@@ -1651,13 +1650,13 @@
                 <h3 class="eyebrow mb-2">Creative Strategy</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     ${attrCell('Hook', v.hook_type)}
-                    ${attrCell('Hook Style', data.hook_style)}
-                    ${attrCell('Angle', data.messaging_angle)}
-                    ${attrCell('Type', data.creative_type)}
-                    ${attrCell('CTA', v.cta_type)}
-                    ${attrCell('Placement', data.cta_placement)}
-                    ${attrCell('Emotion', v.primary_emotion)}
-                    ${attrCell('Offer', data.offer_type)}
+                    ${attrCell('Hook Style', v.hook_style)}
+                    ${attrCell('Angle', v.messaging_angle)}
+                    ${attrCell('Type', v.visual_format)}
+                    ${attrCell('CTA', v.cta)}
+                    ${attrCell('Placement', v.cta_placement)}
+                    ${attrCell('Emotion', v.emotion)}
+                    ${attrCell('Offer', v.offer_type)}
                 </div>
             </div>
 
@@ -1666,33 +1665,33 @@
                 <h3 class="eyebrow mb-2">Production</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     ${attrCell('Style', v.visual_style)}
-                    ${attrCell('Production', data.production_type)}
-                    ${attrCell('Talent', v.talent_type)}
-                    ${attrCell('Product', data.product_presence)}
-                    ${attrCell('Brand', data.brand_presence)}
-                    ${attrCell('Text', data.text_overlay_treatment)}
-                    ${attrCell('Season', data.seasonality)}
+                    ${attrCell('Asset Type', v.asset_type)}
+                    ${attrCell('Talent', v.talent)}
+                    ${attrCell('Product', v.key_products)}
+                    ${attrCell('Brand', v.audience)}
+                    ${attrCell('Text', v.text_overlay_content)}
+                    ${attrCell('Season', v.seasonality)}
                     ${v.aspect_ratio ? attrCell('Ratio', v.aspect_ratio) : ''}
                 </div>
             </div>
 
             <!-- Audio -->
-            ${a.audio_type ? `
+            ${v.audio_type ? `
             <div class="bg-cream border border-rule rounded-xl p-4">
                 <h3 class="eyebrow mb-2">Audio</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    ${attrCell('Type', a.audio_type)}
-                    ${a.music_style ? attrCell('Music', a.music_style) : ''}
-                    ${a.vo_tone ? attrCell('VO', a.vo_tone) : ''}
-                    ${data.audio_shortcode ? attrCell('Code', data.audio_shortcode) : ''}
+                    ${attrCell('Type', v.audio_type)}
+                    ${v.music_style ? attrCell('Music', v.music_style) : ''}
+                    ${v.voiceover_tone ? attrCell('VO', v.voiceover_tone) : ''}
+                    ${v.audio_type ? attrCell('Code', v.audio_type) : ''}
                 </div>
             </div>` : ''}
 
             <!-- Text on creative -->
-            ${data.text_overlay_content ? `
+            ${v.text_overlay_content ? `
             <div class="bg-cream border border-rule rounded-xl p-4">
                 <h3 class="eyebrow mb-2">Text on Creative</h3>
-                <p class="text-sm text-charcoal">${escHtml(data.text_overlay_content)}</p>
+                <p class="text-sm text-charcoal">${escHtml(v.text_overlay_content)}</p>
             </div>` : ''}
 
             <!-- Transcript -->
@@ -1704,10 +1703,10 @@
             </div>` : ''}
 
             <!-- Social Proof -->
-            ${data.social_proof_elements?.length && data.social_proof_elements[0] !== 'NoProof' ? `
+            ${v.social_proof_elements?.length && v.social_proof_elements[0] !== 'NoProof' ? `
             <div class="bg-cream border border-rule rounded-xl p-4">
                 <h3 class="eyebrow mb-2">Social Proof</h3>
-                <div class="flex flex-wrap gap-1">${data.social_proof_elements.map(s => `<span class="tag text-[11px]">${s}</span>`).join('')}</div>
+                <div class="flex flex-wrap gap-1">${v.social_proof_elements.map(s => `<span class="tag text-[11px]">${s}</span>`).join('')}</div>
             </div>` : ''}
 
             <div class="text-xs text-stone text-right">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</div>
