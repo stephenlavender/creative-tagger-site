@@ -1750,33 +1750,44 @@
             }).join('') + `<th class="pb-2 pr-2 font-medium text-ash text-xs">Date</th><th class="pb-2 font-medium text-ash text-xs">Ad Name</th><th></th>`;
 
             // Dropdown-eligible fields
-            const dropdownFields = ['hook_type','messaging_angle','visual_format','visual_style','cta','emotion','asset_type','talent','offer_type','audio_type','seasonality'];
+            // Map template keys to dropdown option keys
+            const dropdownMap = {
+                hook_type: 'hook_type', asset_type: 'asset_type',
+                visual_format: 'creative_type', visual_style: 'visual_style',
+                cta: 'cta_type', emotion: 'emotion', talent: 'talent',
+                offer_type: 'offer_type', audio_type: 'audio_type',
+                seasonality: 'seasonality', messaging_angle: 'messaging_angle',
+            };
+
+            // Add dropdown options for fields that don't have them yet
+            if (!DROPDOWN_OPTIONS['asset_type']) {
+                DROPDOWN_OPTIONS['asset_type'] = ['UGC','Lifestyle','Product Shot','Studio','High Production','Screen Recording','Stock','AI Generated','Animation','Mixed Media'];
+            }
+            if (!DROPDOWN_OPTIONS['talent']) {
+                DROPDOWN_OPTIONS['talent'] = ['No Talent','Creator','Model','Founder','Customer','Voiceover Only','Hands Only','Employee','Expert','Influencer'];
+            }
+            if (!DROPDOWN_OPTIONS['offer_type']) {
+                DROPDOWN_OPTIONS['offer_type'] = ['No Offer','Percent Off','Dollar Off','Free Shipping','BOGO','Bundle','Free Gift','Subscribe Save','Limited Time','Clearance'];
+            }
+            if (!DROPDOWN_OPTIONS['audio_type']) {
+                DROPDOWN_OPTIONS['audio_type'] = ['Voiceover + Music','Voiceover Only','Music Only','Trending Sound','Native Audio','Silent'];
+            }
+            if (!DROPDOWN_OPTIONS['seasonality']) {
+                DROPDOWN_OPTIONS['seasonality'] = ['Evergreen','Black Friday','Cyber Monday','Holiday','New Year','Valentines','Mothers Day','Fathers Day','Back To School','Summer','Spring','Fall','Prime Day','Launch','Flash Sale'];
+            }
 
             tbody.innerHTML = data.items.map((item, idx) => {
                 const cells = template.map(key => {
-                    const fieldKey = key === 'brand' ? null : key;
-                    if (key === 'brand') {
-                        return `<td class="py-2 pr-2 text-xs text-obsidian font-medium">${getBrand().toUpperCase()}</td>`;
+                    const val = item[key] || '';
+                    const dKey = dropdownMap[key];
+
+                    // Dropdown if we have options for this field
+                    if (dKey && DROPDOWN_OPTIONS[dKey]) {
+                        return `<td class="py-2 pr-2">${makeDropdown(dKey, val, idx)}</td>`;
                     }
-                    if (key === 'filename') {
-                        return `<td class="py-2 pr-2"><input type="text" value="${escAttr(item.filename || '')}" oninput="updateLibFilename(${idx},this.value)" class="bg-transparent border-0 text-xs text-obsidian font-medium py-0.5 px-0 focus:outline-none w-full max-w-[120px]"></td>`;
-                    }
-                    if (key === 'version') {
-                        return `<td class="py-2 pr-2 text-xs text-stone">V1</td>`;
-                    }
-                    if (key === 'aspect_ratio') {
-                        return `<td class="py-2 pr-2 text-xs text-stone">${(item.aspect_ratio || item[key] || '').replace(':','x')}</td>`;
-                    }
-                    if (key === 'duration') {
-                        return `<td class="py-2 pr-2 text-xs text-stone">${item.duration || ''}</td>`;
-                    }
-                    // Map library column names to dropdown keys
-                    const dKey = key === 'cta' ? 'cta_type' : key === 'visual_format' ? 'creative_type' : key;
-                    if (dropdownFields.includes(key) && DROPDOWN_OPTIONS[dKey]) {
-                        return `<td class="py-2 pr-2">${makeDropdown(dKey, item[key] || item[dKey], idx)}</td>`;
-                    }
-                    // Text field (audience, messaging_angle if dynamic)
-                    return `<td class="py-2 pr-2 text-xs text-charcoal">${escHtml(item[key] || '')}</td>`;
+
+                    // Editable text input for everything else
+                    return `<td class="py-2 pr-2"><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value)" class="bg-transparent border-0 text-xs text-obsidian py-0.5 px-0 focus:outline-none w-full max-w-[120px]"></td>`;
                 }).join('');
 
                 return `<tr class="border-b border-rule/50 hover:bg-cream/50">
