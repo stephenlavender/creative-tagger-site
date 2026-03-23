@@ -1560,9 +1560,11 @@
         emotion: ['Urgency','Curiosity','Trust','Fear','Desire','Humor','Aspiration','Relief','Belonging','Neutral'],
     };
 
-    function makeDropdown(fieldName, currentVal, rowIdx) {
+    function makeDropdown(fieldName, currentVal, rowIdx, templateKey, colIdx) {
         const opts = DROPDOWN_OPTIONS[fieldName] || [];
-        return `<select onchange="updateLibField(${rowIdx},'${fieldName}',this.value)" class="bg-transparent border-0 text-xs text-obsidian py-0.5 px-0 focus:outline-none cursor-pointer hover:text-dune w-full">
+        const tKey = templateKey || fieldName;
+        const col = colIdx !== undefined ? colIdx : -1;
+        return `<select onchange="updateLibField(${rowIdx},'${tKey}',this.value,${col})" class="bg-transparent text-xs text-obsidian py-0.5 px-0 cursor-pointer w-full">
             ${opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join('')}
             ${!opts.includes(currentVal) && currentVal ? `<option value="${currentVal}" selected>${currentVal}</option>` : ''}
         </select>`;
@@ -1767,33 +1769,33 @@
         });
     }
 
-    function updateLibField(idx, field, value) {
+    function updateLibField(idx, field, value, col) {
         if (!LIB_DATA[idx]) return;
         LIB_DATA[idx][field] = value;
 
+        // If col not provided, look it up
+        if (col === undefined || col < 0) {
+            col = getNamingTemplate().indexOf(field);
+        }
+
         // Apply to all selected cells in the same column
-        if (SELECTED_CELLS.size > 1) {
-            const template = getNamingTemplate();
-            const col = template.indexOf(field);
-            if (col >= 0) {
-                SELECTED_CELLS.forEach(id => {
-                    const [r] = id.split('-').map(Number);
-                    if (LIB_DATA[r] && r !== idx) {
-                        LIB_DATA[r][field] = value;
-                        // Update the input/select in that cell
-                        const row = document.querySelectorAll('#libraryTableBody tr')[r];
-                        if (row) {
-                            const cell = row.children[col];
-                            if (cell) {
-                                const input = cell.querySelector('input, select');
-                                if (input) input.value = value;
-                            }
+        if (SELECTED_CELLS.size > 0 && col >= 0) {
+            SELECTED_CELLS.forEach(id => {
+                const [r, c] = id.split('-').map(Number);
+                if (c === col && LIB_DATA[r] && r !== idx) {
+                    LIB_DATA[r][field] = value;
+                    const row = document.querySelectorAll('#libraryTableBody tr')[r];
+                    if (row) {
+                        const cell = row.children[col];
+                        if (cell) {
+                            const input = cell.querySelector('input, select');
+                            if (input) input.value = value;
                         }
-                        const nameCell = document.getElementById(`lib-adname-${r}`);
-                        if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
                     }
-                });
-            }
+                    const nameCell = document.getElementById(`lib-adname-${r}`);
+                    if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
+                }
+            });
         }
 
         const nameCell = document.getElementById(`lib-adname-${idx}`);
@@ -1888,10 +1890,10 @@
                     const clickHandler = `onclick="cellClick(event,${idx},${col},'${key}')"`;
 
                     if (dKey && DROPDOWN_OPTIONS[dKey]) {
-                        return `<td ${clickHandler}>${makeDropdown(dKey, val, idx)}</td>`;
+                        return `<td ${clickHandler}>${makeDropdown(dKey, val, idx, key, col)}</td>`;
                     }
 
-                    return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value)" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
+                    return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
                 }).join('');
 
                 return `<tr class="border-b border-rule/50 hover:bg-cream/50">
