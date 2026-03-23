@@ -388,6 +388,44 @@
         </div>
     </div>
 
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideUpgrade()">
+        <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-lg">
+            <h2 class="font-display text-2xl font-normal mb-2" id="upgradeTitle">You've reached your limit</h2>
+            <p class="text-ash text-sm mb-6" id="upgradeSubtitle">Upgrade to keep analyzing creatives.</p>
+
+            <div class="space-y-3 mb-6">
+                <div class="eyebrow mb-2">Credit Packs (one-time)</div>
+                <button onclick="checkout('starter')" class="w-full flex items-center justify-between bg-cream border border-rule rounded-xl p-4 hover:border-dune transition text-left">
+                    <div><div class="font-semibold text-sm">Starter</div><div class="text-xs text-ash">110 credits</div></div>
+                    <div class="font-semibold">$10</div>
+                </button>
+                <button onclick="checkout('growth')" class="w-full flex items-center justify-between bg-cream border border-rule rounded-xl p-4 hover:border-dune transition text-left">
+                    <div><div class="font-semibold text-sm">Growth</div><div class="text-xs text-ash">600 credits — 17% savings</div></div>
+                    <div class="font-semibold">$50</div>
+                </button>
+                <button onclick="checkout('pro_credits')" class="w-full flex items-center justify-between bg-cream border border-rule rounded-xl p-4 hover:border-dune transition text-left">
+                    <div><div class="font-semibold text-sm">Pro</div><div class="text-xs text-ash">2,800 credits — 29% savings</div></div>
+                    <div class="font-semibold">$200</div>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="eyebrow mb-2">Monthly Plans</div>
+                <button onclick="checkout('dashboard_pro')" class="w-full flex items-center justify-between bg-cream border-2 border-dune rounded-xl p-4 hover:bg-dune-light transition text-left">
+                    <div><div class="font-semibold text-sm">Dashboard Pro</div><div class="text-xs text-ash">1,000 analyses/month</div></div>
+                    <div class="font-semibold">$49/mo</div>
+                </button>
+                <button onclick="checkout('dashboard_scale')" class="w-full flex items-center justify-between bg-cream border border-rule rounded-xl p-4 hover:border-dune transition text-left">
+                    <div><div class="font-semibold text-sm">Dashboard Scale</div><div class="text-xs text-ash">10,000 analyses/month</div></div>
+                    <div class="font-semibold">$199/mo</div>
+                </button>
+            </div>
+
+            <button onclick="hideUpgrade()" class="w-full text-center text-sm text-stone mt-4 hover:text-obsidian transition">Maybe later</button>
+        </div>
+    </div>
+
     <!-- Auth Modal -->
     <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideAuth()">
         <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
@@ -701,6 +739,10 @@
             body: formData,
         });
 
+        if (resp.status === 429) {
+            showUpgrade();
+            throw new Error('Usage limit reached');
+        }
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({ detail: resp.statusText }));
             throw new Error(err.detail || 'Request failed');
@@ -1780,6 +1822,44 @@
         } catch (e) {
             console.error('Patterns load failed:', e);
         }
+    }
+
+    // --- Upgrade / Billing ---
+    function showUpgrade() {
+        document.getElementById('upgradeModal').classList.remove('hidden');
+    }
+
+    function hideUpgrade() {
+        document.getElementById('upgradeModal').classList.add('hidden');
+    }
+
+    async function checkout(product) {
+        try {
+            const formData = new FormData();
+            formData.append('product', product);
+            const data = await callApiRaw('/billing/checkout', formData);
+            if (data.checkout_url) {
+                window.open(data.checkout_url, '_blank');
+                hideUpgrade();
+                showToast('Checkout opened in new tab');
+            }
+        } catch (e) {
+            showToast('Checkout failed: ' + e.message, 'error');
+        }
+    }
+
+    async function callApiRaw(path, formData) {
+        const headers = {};
+        const apiKey = getApiKey();
+        if (apiKey) headers['X-API-Key'] = apiKey;
+        const resp = await fetch(getEndpoint() + path, {
+            method: 'POST', headers, body: formData,
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Request failed');
+        }
+        return resp.json();
     }
 
     // --- Auth Gate ---
