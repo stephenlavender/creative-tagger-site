@@ -145,6 +145,20 @@
                 </div>
             </div>
 
+            <!-- Naming Template Builder -->
+            <div class="bg-cream border border-rule rounded-xl p-4 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="eyebrow">Naming Convention Builder</div>
+                    <button onclick="resetNamingTemplate()" class="text-[10px] text-stone hover:text-obsidian transition">Reset to default</button>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mb-2" id="namingFieldPicker">
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs text-stone">Preview:</span>
+                    <span id="namingPreview" class="font-mono text-xs text-charcoal"></span>
+                </div>
+            </div>
+
             <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="w-full text-sm" id="libraryTable">
@@ -1513,7 +1527,7 @@
         btn.classList.remove('text-ash', 'border-transparent');
         document.getElementById(`appTab-${tab}`).classList.remove('hidden');
 
-        if (tab === 'library') loadLibrary();
+        if (tab === 'library') { renderNamingFieldPicker(); loadLibrary(); }
         if (tab === 'patterns') loadPatterns();
     }
 
@@ -1537,24 +1551,96 @@
         </select>`;
     }
 
-    function buildAdName(item) {
-        const sep = document.getElementById('librarySeparator').value;
-        const brand = getBrand().toUpperCase();
-        const parts = [
-            brand,
-            item.hook_type,
-            item.messaging_angle,
-            item.creative_type,
-            item.visual_style,
-            item.cta_type,
-            item.emotion,
-        ].filter(Boolean);
-        let name = parts.join(sep);
-        // Append creative name if set and different from brand
-        const creative = (item.filename || '').replace(/\.[^.]+$/, '');
-        if (creative && creative.toUpperCase() !== brand) {
-            name = creative + sep + name;
+    // --- Naming Template ---
+    const NAMING_FIELDS = {
+        brand: { label: 'Brand', getValue: () => getBrand().toUpperCase() },
+        filename: { label: 'Creative Name', getValue: (item) => (item.filename || '').replace(/\.[^.]+$/, '') },
+        asset_type: { label: 'Asset Type', getValue: (item) => item.asset_type },
+        visual_format: { label: 'Visual Format', getValue: (item) => item.visual_format || item.creative_type },
+        visual_style: { label: 'Visual Style', getValue: (item) => item.visual_style },
+        talent: { label: 'Talent', getValue: (item) => item.talent || item.talent_type },
+        audience: { label: 'Audience', getValue: (item) => item.audience },
+        messaging_angle: { label: 'Angle', getValue: (item) => item.messaging_angle },
+        hook_type: { label: 'Hook', getValue: (item) => item.hook_type },
+        cta: { label: 'CTA', getValue: (item) => item.cta || item.cta_type },
+        emotion: { label: 'Emotion', getValue: (item) => item.emotion },
+        offer_type: { label: 'Offer', getValue: (item) => item.offer_type },
+        audio_type: { label: 'Audio', getValue: (item) => item.audio_type },
+        seasonality: { label: 'Season', getValue: (item) => item.seasonality },
+        aspect_ratio: { label: 'Ratio', getValue: (item) => (item.aspect_ratio || '').replace(':', 'x') },
+        duration: { label: 'Duration', getValue: (item) => item.duration },
+        version: { label: 'Version', getValue: () => 'V1' },
+    };
+
+    const DEFAULT_TEMPLATE = ['brand', 'asset_type', 'visual_format', 'talent', 'hook_type', 'cta', 'aspect_ratio', 'version'];
+
+    function getNamingTemplate() {
+        const saved = localStorage.getItem('ct_naming_template');
+        if (saved) {
+            try { return JSON.parse(saved); } catch {}
         }
+        return DEFAULT_TEMPLATE;
+    }
+
+    function saveNamingTemplate(fields) {
+        localStorage.setItem('ct_naming_template', JSON.stringify(fields));
+    }
+
+    function renderNamingFieldPicker() {
+        const active = getNamingTemplate();
+        const picker = document.getElementById('namingFieldPicker');
+        picker.innerHTML = Object.entries(NAMING_FIELDS).map(([key, field]) => {
+            const isActive = active.includes(key);
+            return `<button onclick="toggleNamingField('${key}')"
+                class="${isActive ? 'bg-dune text-deep border-dune' : 'bg-parchment text-stone border-rule'} border rounded-full px-2.5 py-1 text-[11px] font-medium transition hover:border-dune"
+                data-field="${key}">${field.label}</button>`;
+        }).join('');
+        updateNamingPreview();
+    }
+
+    function toggleNamingField(key) {
+        let template = getNamingTemplate();
+        if (template.includes(key)) {
+            template = template.filter(k => k !== key);
+        } else {
+            template.push(key);
+        }
+        saveNamingTemplate(template);
+        renderNamingFieldPicker();
+        rebuildAllNames();
+    }
+
+    function resetNamingTemplate() {
+        saveNamingTemplate(DEFAULT_TEMPLATE);
+        renderNamingFieldPicker();
+        rebuildAllNames();
+    }
+
+    function updateNamingPreview() {
+        const template = getNamingTemplate();
+        const sep = document.getElementById('librarySeparator')?.value || '_';
+        const sample = {
+            filename: 'Ad-001', asset_type: 'UGC', visual_format: 'Talking Head',
+            visual_style: 'Organic', talent: 'Creator', audience: 'Wellness Seekers',
+            messaging_angle: 'Pain Point', hook_type: 'Question', cta: 'Shop Now',
+            emotion: 'Curiosity', offer_type: 'No Offer', audio_type: 'Voiceover + Music',
+            seasonality: 'Evergreen', aspect_ratio: '9x16', duration: '30s',
+        };
+        const name = buildAdName(sample);
+        const el = document.getElementById('namingPreview');
+        if (el) el.textContent = name;
+    }
+
+    function buildAdName(item) {
+        const sep = document.getElementById('librarySeparator')?.value || '_';
+        const template = getNamingTemplate();
+        const parts = template.map(key => {
+            const field = NAMING_FIELDS[key];
+            if (!field) return '';
+            const val = field.getValue(item);
+            return val ? String(val).replace(/ /g, '') : '';
+        }).filter(Boolean);
+        return parts.join(sep);
         return name;
     }
 
@@ -1577,6 +1663,7 @@
             const nameCell = document.getElementById(`lib-adname-${idx}`);
             if (nameCell) nameCell.textContent = buildAdName(item);
         });
+        updateNamingPreview();
     }
 
     function formatDate(ts) {
