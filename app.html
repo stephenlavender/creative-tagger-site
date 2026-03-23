@@ -51,6 +51,26 @@
         .import-tab.tab-active { color: #B8A98A; border-color: #B8A98A; }
         .import-tab:not(.tab-active) { border-color: transparent; color: #6B6560; }
         .import-tab:not(.tab-active):hover { color: #0D0D0D; }
+        /* Drag and drop naming builder */
+        .naming-pill { cursor: grab; user-select: none; transition: transform 0.15s, opacity 0.15s; }
+        .naming-pill:active { cursor: grabbing; }
+        .naming-pill.dragging { opacity: 0.3; transform: scale(0.95); }
+        .naming-pill.drag-over-left { box-shadow: -3px 0 0 0 #B8A98A; }
+        .naming-pill.drag-over-right { box-shadow: 3px 0 0 0 #B8A98A; }
+
+        /* Sheet-like table */
+        #libraryTable td { border: 1px solid transparent; padding: 4px 6px; }
+        #libraryTable td:hover { background: rgba(184,169,138,0.06); }
+        #libraryTable td input,
+        #libraryTable td select { border: 1px solid transparent !important; border-radius: 3px; padding: 3px 4px; transition: border-color 0.1s, background 0.1s; }
+        #libraryTable td input:focus,
+        #libraryTable td select:focus { border-color: #B8A98A !important; background: white !important; box-shadow: 0 0 0 2px rgba(184,169,138,0.15); }
+        #libraryTable td input:hover,
+        #libraryTable td select:hover { background: rgba(184,169,138,0.06); }
+        #libraryTable td.cell-selected { background: rgba(184,169,138,0.12); }
+        #libraryTable td.cell-selected input,
+        #libraryTable td.cell-selected select { background: rgba(184,169,138,0.08); }
+
         .file-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #F0EBE3; border: 1px solid #D6D1CA; border-radius: 5px; font-size: 13px; }
         .file-row .name { flex: 1; color: #2C2C2C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .file-row .remove { color: #BFBAB3; cursor: pointer; }
@@ -153,7 +173,7 @@
                 </div>
                 <div class="mb-2">
                     <div class="text-[10px] text-stone mb-1">Active — drag to reorder</div>
-                    <div class="flex flex-wrap gap-1.5 min-h-[32px] p-2 bg-parchment border border-dune-light rounded-lg" id="namingActive" ondragover="event.preventDefault()" ondrop="handleFieldDrop(event)">
+                    <div class="flex flex-wrap gap-1 min-h-[32px] p-2 bg-parchment border border-dune-light rounded-lg" id="namingActive">
                     </div>
                 </div>
                 <div class="mb-2">
@@ -1590,24 +1610,73 @@
         const activeEl = document.getElementById('namingActive');
         const availEl = document.getElementById('namingAvailable');
 
-        // Active fields — draggable, click to remove
-        activeEl.innerHTML = active.map(key => {
+        activeEl.innerHTML = active.map((key, i) => {
             const field = NAMING_FIELDS[key];
             if (!field) return '';
-            return `<div draggable="true" ondragstart="_dragField='${key}'" ondragover="event.preventDefault()" ondrop="handleFieldReorder(event,'${key}')"
-                class="bg-dune text-deep border border-dune rounded-full px-2.5 py-1 text-[11px] font-medium cursor-grab select-none flex items-center gap-1"
-                >${field.label}<button onclick="removeNamingField('${key}')" class="text-deep/50 hover:text-deep ml-0.5">&times;</button></div>`;
+            return `<div draggable="true" data-key="${key}" data-idx="${i}"
+                class="naming-pill bg-dune text-deep border border-dune rounded-full px-2.5 py-1 text-[11px] font-medium flex items-center gap-1"
+                ondragstart="pillDragStart(event,'${key}')"
+                ondragend="pillDragEnd(event)"
+                ondragover="pillDragOver(event,'${key}')"
+                ondragleave="pillDragLeave(event)"
+                ondrop="pillDrop(event,'${key}')"
+                >${i > 0 ? '<span class="text-deep/30 mr-0.5 text-[9px]">_</span>' : ''}${field.label}<button onclick="event.stopPropagation();removeNamingField('${key}')" class="text-deep/40 hover:text-deep ml-1 text-xs leading-none">&times;</button></div>`;
         }).join('');
 
-        // Available fields — click to add
         const available = Object.keys(NAMING_FIELDS).filter(k => !active.includes(k));
         availEl.innerHTML = available.map(key => {
             const field = NAMING_FIELDS[key];
             return `<button onclick="addNamingField('${key}')"
-                class="bg-parchment text-stone border border-rule rounded-full px-2.5 py-1 text-[11px] font-medium hover:border-dune transition">+ ${field.label}</button>`;
+                class="bg-parchment text-stone border border-rule rounded-full px-2.5 py-1 text-[11px] font-medium hover:border-dune hover:text-charcoal transition">+ ${field.label}</button>`;
         }).join('');
 
         updateNamingPreview();
+    }
+
+    function pillDragStart(e, key) {
+        _dragField = key;
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function pillDragEnd(e) {
+        _dragField = null;
+        e.target.classList.remove('dragging');
+        document.querySelectorAll('.naming-pill').forEach(p => {
+            p.classList.remove('drag-over-left', 'drag-over-right');
+        });
+    }
+
+    function pillDragOver(e, targetKey) {
+        e.preventDefault();
+        if (!_dragField || _dragField === targetKey) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const midX = rect.left + rect.width / 2;
+        e.currentTarget.classList.remove('drag-over-left', 'drag-over-right');
+        e.currentTarget.classList.add(e.clientX < midX ? 'drag-over-left' : 'drag-over-right');
+    }
+
+    function pillDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over-left', 'drag-over-right');
+    }
+
+    function pillDrop(e, targetKey) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over-left', 'drag-over-right');
+        if (!_dragField || _dragField === targetKey) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const dropBefore = e.clientX < rect.left + rect.width / 2;
+
+        let template = getNamingTemplate();
+        template = template.filter(k => k !== _dragField);
+        const targetIdx = template.indexOf(targetKey);
+        template.splice(dropBefore ? targetIdx : targetIdx + 1, 0, _dragField);
+        _dragField = null;
+        saveNamingTemplate(template);
+        renderNamingFieldPicker();
+        rebuildAllNames();
+        loadLibrary();
     }
 
     function addNamingField(key) {
@@ -1616,7 +1685,7 @@
         saveNamingTemplate(template);
         renderNamingFieldPicker();
         rebuildAllNames();
-        loadLibrary(); // Rebuild table with new columns
+        loadLibrary();
     }
 
     function removeNamingField(key) {
@@ -1625,34 +1694,6 @@
         renderNamingFieldPicker();
         rebuildAllNames();
         loadLibrary();
-    }
-
-    function handleFieldReorder(event, targetKey) {
-        event.preventDefault();
-        if (!_dragField || _dragField === targetKey) return;
-        let template = getNamingTemplate();
-        template = template.filter(k => k !== _dragField);
-        const targetIdx = template.indexOf(targetKey);
-        template.splice(targetIdx, 0, _dragField);
-        _dragField = null;
-        saveNamingTemplate(template);
-        renderNamingFieldPicker();
-        rebuildAllNames();
-        loadLibrary();
-    }
-
-    function handleFieldDrop(event) {
-        event.preventDefault();
-        // If dropped on the container (not another field), add to end
-        if (_dragField) {
-            let template = getNamingTemplate();
-            if (!template.includes(_dragField)) template.push(_dragField);
-            _dragField = null;
-            saveNamingTemplate(template);
-            renderNamingFieldPicker();
-            rebuildAllNames();
-            loadLibrary();
-        }
     }
 
     function resetNamingTemplate() {
@@ -1688,9 +1729,73 @@
         return name;
     }
 
+    // --- Cell selection + bulk edit ---
+    const SELECTED_CELLS = new Set(); // "row-col" strings
+    let _lastClickedCell = null;
+
+    function cellClick(event, row, col, field) {
+        const cellId = `${row}-${col}`;
+        if (event.shiftKey && _lastClickedCell) {
+            // Range select
+            const [startRow] = _lastClickedCell.split('-').map(Number);
+            const minRow = Math.min(startRow, row);
+            const maxRow = Math.max(startRow, row);
+            for (let r = minRow; r <= maxRow; r++) {
+                SELECTED_CELLS.add(`${r}-${col}`);
+            }
+        } else if (event.metaKey || event.ctrlKey) {
+            // Toggle select
+            if (SELECTED_CELLS.has(cellId)) SELECTED_CELLS.delete(cellId);
+            else SELECTED_CELLS.add(cellId);
+        } else {
+            SELECTED_CELLS.clear();
+            SELECTED_CELLS.add(cellId);
+        }
+        _lastClickedCell = cellId;
+        renderCellSelection();
+    }
+
+    function renderCellSelection() {
+        document.querySelectorAll('#libraryTable td').forEach(td => td.classList.remove('cell-selected'));
+        SELECTED_CELLS.forEach(id => {
+            const [r, c] = id.split('-').map(Number);
+            const row = document.querySelectorAll('#libraryTableBody tr')[r];
+            if (row) {
+                const cell = row.children[c];
+                if (cell) cell.classList.add('cell-selected');
+            }
+        });
+    }
+
     function updateLibField(idx, field, value) {
         if (!LIB_DATA[idx]) return;
         LIB_DATA[idx][field] = value;
+
+        // Apply to all selected cells in the same column
+        if (SELECTED_CELLS.size > 1) {
+            const template = getNamingTemplate();
+            const col = template.indexOf(field);
+            if (col >= 0) {
+                SELECTED_CELLS.forEach(id => {
+                    const [r] = id.split('-').map(Number);
+                    if (LIB_DATA[r] && r !== idx) {
+                        LIB_DATA[r][field] = value;
+                        // Update the input/select in that cell
+                        const row = document.querySelectorAll('#libraryTableBody tr')[r];
+                        if (row) {
+                            const cell = row.children[col];
+                            if (cell) {
+                                const input = cell.querySelector('input, select');
+                                if (input) input.value = value;
+                            }
+                        }
+                        const nameCell = document.getElementById(`lib-adname-${r}`);
+                        if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
+                    }
+                });
+            }
+        }
+
         const nameCell = document.getElementById(`lib-adname-${idx}`);
         if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[idx]);
     }
@@ -1777,17 +1882,16 @@
             }
 
             tbody.innerHTML = data.items.map((item, idx) => {
-                const cells = template.map(key => {
+                const cells = template.map((key, col) => {
                     const val = item[key] || '';
                     const dKey = dropdownMap[key];
+                    const clickHandler = `onclick="cellClick(event,${idx},${col},'${key}')"`;
 
-                    // Dropdown if we have options for this field
                     if (dKey && DROPDOWN_OPTIONS[dKey]) {
-                        return `<td class="py-2 pr-2">${makeDropdown(dKey, val, idx)}</td>`;
+                        return `<td ${clickHandler}>${makeDropdown(dKey, val, idx)}</td>`;
                     }
 
-                    // Editable text input for everything else
-                    return `<td class="py-2 pr-2"><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value)" class="bg-transparent border-0 text-xs text-obsidian py-0.5 px-0 focus:outline-none w-full max-w-[120px]"></td>`;
+                    return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value)" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
                 }).join('');
 
                 return `<tr class="border-b border-rule/50 hover:bg-cream/50">
