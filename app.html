@@ -1826,7 +1826,7 @@
             const [r, c] = id.split('-').map(Number);
             const row = document.querySelectorAll('#libraryTableBody tr')[r];
             if (row) {
-                const cell = row.children[c];
+                const cell = row.children[c + 1]; // +1 for checkbox column
                 if (cell) cell.classList.add('cell-selected');
             }
         });
@@ -1841,24 +1841,40 @@
             col = getNamingTemplate().indexOf(field);
         }
 
-        // Apply to all selected cells in the same column
+        // Collect rows to propagate to: checked rows + cell-selected rows
+        const targetRows = new Set();
+
+        // Checkbox-selected rows (primary method)
+        document.querySelectorAll('.lib-row-check:checked').forEach(cb => {
+            const r = parseInt(cb.dataset.idx);
+            if (r !== idx && LIB_DATA[r]) targetRows.add(r);
+        });
+
+        // Cell-selected rows in same column (legacy method)
         if (SELECTED_CELLS.size > 0 && col >= 0) {
             SELECTED_CELLS.forEach(id => {
                 const [r, c] = id.split('-').map(Number);
-                if (c === col && LIB_DATA[r] && r !== idx) {
-                    LIB_DATA[r][field] = value;
-                    const row = document.querySelectorAll('#libraryTableBody tr')[r];
-                    if (row) {
-                        const cell = row.children[col];
-                        if (cell) {
-                            const input = cell.querySelector('input, select');
-                            if (input) input.value = value;
-                        }
-                    }
-                    const nameCell = document.getElementById(`lib-adname-${r}`);
-                    if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
-                }
+                if (c === col && LIB_DATA[r] && r !== idx) targetRows.add(r);
             });
+        }
+
+        // Apply value to all target rows
+        if (targetRows.size > 0 && col >= 0) {
+            const domCol = col + 1; // +1 for checkbox column
+            targetRows.forEach(r => {
+                LIB_DATA[r][field] = value;
+                const row = document.querySelectorAll('#libraryTableBody tr')[r];
+                if (row) {
+                    const cell = row.children[domCol];
+                    if (cell) {
+                        const input = cell.querySelector('input, select');
+                        if (input) input.value = value;
+                    }
+                }
+                const nameCell = document.getElementById(`lib-adname-${r}`);
+                if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
+            });
+            showToast(`Applied to ${targetRows.size + 1} rows`);
         }
 
         const nameCell = document.getElementById(`lib-adname-${idx}`);
@@ -2012,13 +2028,57 @@
                 bar.className = 'flex items-center gap-3 bg-cream border border-rule rounded-lg px-4 py-2 mb-3';
                 document.getElementById('libraryTable').parentNode.insertBefore(bar, document.getElementById('libraryTable'));
             }
-            bar.innerHTML = `<span class="text-xs text-ash">${count} selected</span>
+            const template = getNamingTemplate();
+            const colOpts = template.map(k => {
+                const f = NAMING_FIELDS[k];
+                return `<option value="${k}">${f ? f.label : k}</option>`;
+            }).join('');
+            bar.innerHTML = `<span class="text-xs text-ash font-medium">${count} selected</span>
+                <span class="text-rule">|</span>
+                <select id="bulkCol" class="bg-cream border border-rule rounded px-2 py-1 text-xs text-obsidian">
+                    <option value="">Fill column...</option>${colOpts}
+                </select>
+                <input type="text" id="bulkVal" placeholder="Value" class="bg-cream border border-rule rounded px-2 py-1 text-xs text-obsidian w-32" onkeydown="if(event.key==='Enter')applyBulkFill()">
+                <button onclick="applyBulkFill()" class="text-xs bg-dune/20 hover:bg-dune/30 text-deep px-2 py-1 rounded transition">Apply</button>
+                <span class="text-rule">|</span>
                 <button onclick="bulkCopyNames()" class="text-xs text-dune hover:text-obsidian transition">Copy Names</button>
                 <button onclick="bulkDelete()" class="text-xs text-stone hover:text-red-500 transition">Delete</button>
                 <button onclick="toggleSelectAll(false)" class="text-xs text-stone hover:text-obsidian transition ml-auto">Clear</button>`;
         } else if (bar) {
             bar.remove();
         }
+    }
+
+    function applyBulkFill() {
+        const field = document.getElementById('bulkCol').value;
+        const value = document.getElementById('bulkVal').value.trim();
+        if (!field || !value) { showToast('Select a column and enter a value', 'error'); return; }
+
+        const indices = getSelectedIndices();
+        if (!indices.length) { showToast('No rows selected', 'error'); return; }
+
+        const template = getNamingTemplate();
+        const col = template.indexOf(field);
+        const domCol = col + 1; // +1 for checkbox column
+
+        indices.forEach(r => {
+            LIB_DATA[r][field] = value;
+            if (col >= 0) {
+                const row = document.querySelectorAll('#libraryTableBody tr')[r];
+                if (row) {
+                    const cell = row.children[domCol];
+                    if (cell) {
+                        const input = cell.querySelector('input, select');
+                        if (input) input.value = value;
+                    }
+                }
+            }
+            const nameCell = document.getElementById(`lib-adname-${r}`);
+            if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[r]);
+        });
+
+        showToast(`Set ${NAMING_FIELDS[field]?.label || field} = "${value}" on ${indices.length} rows`);
+        document.getElementById('bulkVal').value = '';
     }
 
     function bulkCopyNames() {
