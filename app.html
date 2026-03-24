@@ -451,6 +451,17 @@
         </div>
     </div>
 
+    <!-- Compare Modal -->
+    <div id="compareModal" class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 bg-obsidian/40 backdrop-blur-sm overflow-y-auto" onclick="if(event.target===this)closeCompare()">
+        <div class="bg-parchment border border-rule rounded-2xl w-full max-w-5xl mb-16 shadow-lg">
+            <div class="flex items-center justify-between p-5 border-b border-rule">
+                <h2 class="font-semibold text-lg">Compare Creatives</h2>
+                <button onclick="closeCompare()" class="text-stone hover:text-obsidian transition text-lg">&times;</button>
+            </div>
+            <div id="compareBody" class="p-5"></div>
+        </div>
+    </div>
+
     <!-- Upgrade Modal -->
     <div id="upgradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideUpgrade()">
         <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-lg">
@@ -2230,6 +2241,7 @@
                 <input type="text" id="bulkVal" placeholder="Value" class="bg-cream border border-rule rounded px-2 py-1 text-xs text-obsidian w-32" onkeydown="if(event.key==='Enter')applyBulkFill()">
                 <button onclick="applyBulkFill()" class="text-xs bg-dune/20 hover:bg-dune/30 text-deep px-2 py-1 rounded transition">Apply</button>
                 <span class="text-rule">|</span>
+                ${count === 2 ? '<button onclick="compareSelected()" class="text-xs bg-dune/20 hover:bg-dune/30 text-deep px-2 py-1 rounded transition">Compare</button><span class="text-rule">|</span>' : ''}
                 <button onclick="bulkCopyNames()" class="text-xs text-dune hover:text-obsidian transition">Copy Names</button>
                 <button onclick="bulkDelete()" class="text-xs text-stone hover:text-red-500 transition">Delete</button>
                 <button onclick="toggleSelectAll(false)" class="text-xs text-stone hover:text-obsidian transition ml-auto">Clear</button>`;
@@ -2463,6 +2475,67 @@
         document.getElementById('detailModal').classList.remove('hidden');
     }
 
+    // --- Compare ---
+    function compareSelected() {
+        const indices = getSelectedIndices();
+        if (indices.length !== 2) { showToast('Select exactly 2 items to compare', 'error'); return; }
+        const a = LIB_DATA[indices[0]];
+        const b = LIB_DATA[indices[1]];
+        if (!a || !b) return;
+
+        const fields = [
+            ['filename', 'Creative Name'],
+            ['format', 'Format'],
+            ['hook_type', 'Hook Type'],
+            ['messaging_angle', 'Messaging Angle'],
+            ['creative_type', 'Creative Type'],
+            ['visual_style', 'Visual Style'],
+            ['cta_type', 'CTA'],
+            ['emotion', 'Emotion'],
+            ['production_type', 'Asset Type'],
+            ['naming_default', 'Naming'],
+        ];
+
+        const rows = fields.map(([key, label]) => {
+            const va = a[key] || '—';
+            const vb = b[key] || '—';
+            const match = va === vb;
+            const cls = match ? 'text-stone' : 'text-obsidian font-medium';
+            const bg = match ? '' : 'bg-dune/8';
+            return `<tr class="border-b border-rule/50 ${bg}">
+                <td class="py-2.5 pr-4 text-xs text-ash font-medium w-32">${label}</td>
+                <td class="py-2.5 pr-4 text-sm ${cls}">${escHtml(String(va))}</td>
+                <td class="py-2.5 text-sm ${cls}">${escHtml(String(vb))}</td>
+            </tr>`;
+        }).join('');
+
+        const diffCount = fields.filter(([key]) => (a[key] || '') !== (b[key] || '')).length;
+        const matchCount = fields.length - diffCount;
+
+        document.getElementById('compareBody').innerHTML = `
+            <div class="flex gap-4 mb-4">
+                <span class="tag">${diffCount} different</span>
+                <span class="tag tag-muted">${matchCount} same</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-rule">
+                            <th class="pb-2 pr-4 text-xs text-ash font-medium text-left w-32">Attribute</th>
+                            <th class="pb-2 pr-4 text-xs text-ash font-medium text-left">${escHtml(a.filename || 'Creative A')}</th>
+                            <th class="pb-2 text-xs text-ash font-medium text-left">${escHtml(b.filename || 'Creative B')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+        document.getElementById('compareModal').classList.remove('hidden');
+    }
+
+    function closeCompare() {
+        document.getElementById('compareModal').classList.add('hidden');
+    }
+
     async function shareAnalysis(id) {
         const key = getApiKey();
         try {
@@ -2596,10 +2669,87 @@
             }
             html += '</div>';
 
+            // --- Time Trends ---
+            html += await buildTrends();
+
             content.innerHTML = html;
         } catch (e) {
             console.error('Patterns load failed:', e);
         }
+    }
+
+    async function buildTrends() {
+        const key = getApiKey();
+        if (!key) return '';
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library?api_key=${key}&limit=200`);
+            const data = await resp.json();
+            const items = data.items || [];
+            if (items.length < 3) return '';
+
+            const now = new Date();
+            const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const lastDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonth = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}`;
+
+            const bucket = (item) => {
+                const d = (item.created_at || '').slice(0, 7);
+                if (d === thisMonth) return 'this';
+                if (d === lastMonth) return 'last';
+                return 'older';
+            };
+
+            const thisItems = items.filter(i => bucket(i) === 'this');
+            const lastItems = items.filter(i => bucket(i) === 'last');
+
+            if (!thisItems.length && !lastItems.length) return '';
+
+            const trendDims = ['hook_type', 'creative_type', 'emotion'];
+            let html = `<div class="mt-6"><h3 class="eyebrow mb-4">Trends: This Month vs Last Month</h3>
+                <div class="grid md:grid-cols-3 gap-4">`;
+
+            const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const thisLabel = monthNames[now.getMonth()];
+            const lastLabel = monthNames[lastDate.getMonth()];
+
+            for (const dim of trendDims) {
+                const label = dim.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const countBy = (arr) => {
+                    const m = {};
+                    arr.forEach(i => { const v = i[dim]; if (v) m[v] = (m[v] || 0) + 1; });
+                    return m;
+                };
+                const thisCounts = countBy(thisItems);
+                const lastCounts = countBy(lastItems);
+                const allVals = [...new Set([...Object.keys(thisCounts), ...Object.keys(lastCounts)])];
+                allVals.sort((a, b) => ((thisCounts[b] || 0) + (lastCounts[b] || 0)) - ((thisCounts[a] || 0) + (lastCounts[a] || 0)));
+
+                html += `<div class="bg-cream border border-rule rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="eyebrow">${label}</span>
+                        <span class="text-[10px] text-stone">${thisLabel} vs ${lastLabel}</span>
+                    </div>
+                    <div class="space-y-1.5">`;
+
+                allVals.slice(0, 5).forEach(val => {
+                    const tc = thisCounts[val] || 0;
+                    const lc = lastCounts[val] || 0;
+                    const arrow = tc > lc ? '<span class="text-dune">&#9650;</span>' : tc < lc ? '<span class="text-stone">&#9660;</span>' : '<span class="text-rule">=</span>';
+                    html += `<div class="flex items-center gap-2 text-xs">
+                        <span class="w-24 truncate text-charcoal">${escHtml(val)}</span>
+                        <span class="w-6 text-right text-stone">${lc}</span>
+                        <span class="w-4 text-center">${arrow}</span>
+                        <span class="w-6 text-obsidian font-medium">${tc}</span>
+                    </div>`;
+                });
+
+                if (!allVals.length) html += '<p class="text-xs text-stone">No data</p>';
+                html += '</div></div>';
+            }
+
+            html += '</div></div>';
+            return html;
+        } catch { return ''; }
     }
 
     // --- Upgrade / Billing ---

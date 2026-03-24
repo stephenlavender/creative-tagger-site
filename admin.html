@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creative Tagger — Admin</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+    <script>window.tailwindCSS={suppressWarning:true}</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -92,6 +93,24 @@
             <div class="stat-card">
                 <div class="text-2xl font-semibold" id="statActive30">-</div>
                 <div class="stat-label">Active Users (30d)</div>
+            </div>
+        </div>
+
+        <!-- Activity Chart -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-cream border border-rule rounded-lg p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="eyebrow">Analyses (Last 30 Days)</div>
+                    <span id="chartTotal" class="text-xs text-stone"></span>
+                </div>
+                <div id="activityChart" class="flex items-end gap-[2px] h-24"></div>
+            </div>
+            <div class="bg-cream border border-rule rounded-lg p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="eyebrow">User Signups (Last 30 Days)</div>
+                    <span id="signupTotal" class="text-xs text-stone"></span>
+                </div>
+                <div id="signupChart" class="flex items-end gap-[2px] h-24"></div>
             </div>
         </div>
 
@@ -220,6 +239,10 @@
                 </tr>`
             ).join('') || '<tr><td colspan="6" class="py-4 text-ash text-center">No users yet</td></tr>';
 
+            // Charts + auto-refresh
+            loadCharts();
+            startAutoRefresh();
+
         } catch (e) {
             alert('Failed: ' + e.message);
         }
@@ -243,6 +266,61 @@
         if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
         if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
         return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function renderBarChart(containerId, totalId, data, color = '#B8A98A') {
+        const el = document.getElementById(containerId);
+        const max = Math.max(...data.map(d => d.count), 1);
+        const total = data.reduce((s, d) => s + d.count, 0);
+        document.getElementById(totalId).textContent = `${total} total`;
+        el.innerHTML = data.map(d => {
+            const h = Math.max(2, (d.count / max) * 100);
+            return `<div class="flex-1 rounded-t" style="height:${h}%;background:${d.count ? color : '#D6D1CA'}" title="${d.label}: ${d.count}"></div>`;
+        }).join('');
+    }
+
+    async function loadCharts() {
+        try {
+            const [activity, signups] = await Promise.all([
+                fetchAdmin('/admin/usage/daily?days=30'),
+                fetchAdmin('/admin/users/daily?days=30'),
+            ]);
+            // Fill in missing days with 0 for a complete 30-day chart
+            const days30 = [];
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                days30.push(d.toISOString().slice(0, 10));
+            }
+
+            if (activity.daily) {
+                const byDay = {};
+                activity.daily.forEach(d => byDay[d.date] = d.analyses);
+                const data = days30.map(d => ({ label: d, count: byDay[d] || 0 }));
+                renderBarChart('activityChart', 'chartTotal', data);
+            }
+            if (signups.daily) {
+                const byDay = {};
+                signups.daily.forEach(d => byDay[d.date] = d.count);
+                const data = days30.map(d => ({ label: d, count: byDay[d] || 0 }));
+                renderBarChart('signupChart', 'signupTotal', data, '#6B6560');
+            }
+        } catch {}
+    }
+
+    // Auto-refresh every 60s
+    let _refreshInterval = null;
+    function startAutoRefresh() {
+        _refreshInterval = setInterval(async () => {
+            try {
+                const stats = await fetchAdmin('/admin/stats');
+                document.getElementById('statUsers').textContent = stats.users.total;
+                document.getElementById('statAnalyses').textContent = stats.analyses.total;
+                document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
+                document.getElementById('statActive').textContent = stats.users.active_7d;
+                document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
+                document.getElementById('statAnalysesToday').textContent = stats.analyses.today;
+            } catch {}
+        }, 60000);
     }
 
     document.getElementById('adminToken').addEventListener('keydown', e => { if (e.key === 'Enter') loadDashboard(); });
