@@ -67,9 +67,9 @@
         #libraryTable td select:focus { border-color: #B8A98A !important; background: white !important; box-shadow: 0 0 0 2px rgba(184,169,138,0.15); }
         #libraryTable td input:hover,
         #libraryTable td select:hover { background: rgba(184,169,138,0.06); }
-        #libraryTable td.cell-selected { background: rgba(184,169,138,0.12); }
+        #libraryTable td.cell-selected { background: rgba(184,169,138,0.18); outline: 2px solid #B8A98A; outline-offset: -2px; }
         #libraryTable td.cell-selected input,
-        #libraryTable td.cell-selected select { background: rgba(184,169,138,0.08); }
+        #libraryTable td.cell-selected select { background: rgba(184,169,138,0.12); }
 
         /* Skeleton shimmer */
         .skeleton { background: linear-gradient(90deg, #F0EBE3 25%, #E8E3DB 50%, #F0EBE3 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
@@ -1624,11 +1624,12 @@
         emotion: ['Urgency','Curiosity','Trust','Fear','Desire','Humor','Aspiration','Relief','Belonging','Neutral'],
     };
 
-    function makeDropdown(fieldName, currentVal, rowIdx, templateKey, colIdx) {
+    function makeDropdown(fieldName, currentVal, rowIdx, templateKey, colIdx, extraAttrs) {
         const opts = DROPDOWN_OPTIONS[fieldName] || [];
         const tKey = templateKey || fieldName;
         const col = colIdx !== undefined ? colIdx : -1;
-        return `<select onchange="updateLibField(${rowIdx},'${tKey}',this.value,${col})" class="bg-transparent text-xs text-obsidian py-0.5 px-0 cursor-pointer w-full">
+        const extra = extraAttrs || '';
+        return `<select onchange="updateLibField(${rowIdx},'${tKey}',this.value,${col})" ${extra} class="bg-transparent text-xs text-obsidian py-0.5 px-0 cursor-pointer w-full">
             ${opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join('')}
             ${!opts.includes(currentVal) && currentVal ? `<option value="${currentVal}" selected>${currentVal}</option>` : ''}
         </select>`;
@@ -1797,11 +1798,14 @@
     // --- Cell selection + bulk edit ---
     const SELECTED_CELLS = new Set(); // "row-col" strings
     let _lastClickedCell = null;
+    let _selectedCol = null; // track which column is selected for propagation
 
     function cellClick(event, row, col, field) {
+        // Don't clear selection if just focusing an input
+        event.stopPropagation();
         const cellId = `${row}-${col}`;
         if (event.shiftKey && _lastClickedCell) {
-            // Range select
+            // Range select down the column
             const [startRow] = _lastClickedCell.split('-').map(Number);
             const minRow = Math.min(startRow, row);
             const maxRow = Math.max(startRow, row);
@@ -1809,7 +1813,6 @@
                 SELECTED_CELLS.add(`${r}-${col}`);
             }
         } else if (event.metaKey || event.ctrlKey) {
-            // Toggle select
             if (SELECTED_CELLS.has(cellId)) SELECTED_CELLS.delete(cellId);
             else SELECTED_CELLS.add(cellId);
         } else {
@@ -1817,7 +1820,18 @@
             SELECTED_CELLS.add(cellId);
         }
         _lastClickedCell = cellId;
+        _selectedCol = col;
         renderCellSelection();
+    }
+
+    function selectColumn(col) {
+        SELECTED_CELLS.clear();
+        for (let r = 0; r < LIB_DATA.length; r++) {
+            SELECTED_CELLS.add(`${r}-${col}`);
+        }
+        _selectedCol = col;
+        renderCellSelection();
+        showToast(`Selected ${LIB_DATA.length} cells in column`);
     }
 
     function renderCellSelection() {
@@ -1830,6 +1844,23 @@
                 if (cell) cell.classList.add('cell-selected');
             }
         });
+        // Show count if multiple selected
+        const count = SELECTED_CELLS.size;
+        if (count > 1) {
+            let bar = document.getElementById('cellBar');
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'cellBar';
+                bar.className = 'flex items-center gap-3 bg-dune/10 border border-dune/30 rounded-lg px-4 py-2 mb-3 text-xs';
+                document.getElementById('libraryTable').parentNode.insertBefore(bar, document.getElementById('libraryTable'));
+            }
+            bar.innerHTML = `<span class="text-ash font-medium">${count} cells selected</span>
+                <span class="text-stone">Edit any cell to apply to all</span>
+                <button onclick="SELECTED_CELLS.clear();renderCellSelection()" class="text-stone hover:text-obsidian transition ml-auto">Clear</button>`;
+        } else {
+            const bar = document.getElementById('cellBar');
+            if (bar) bar.remove();
+        }
     }
 
     function updateLibField(idx, field, value, col) {
@@ -1841,22 +1872,22 @@
             col = getNamingTemplate().indexOf(field);
         }
 
-        // Collect rows to propagate to: checked rows + cell-selected rows
+        // Collect rows to propagate to from both selection methods
         const targetRows = new Set();
 
-        // Checkbox-selected rows (primary method)
-        document.querySelectorAll('.lib-row-check:checked').forEach(cb => {
-            const r = parseInt(cb.dataset.idx);
-            if (r !== idx && LIB_DATA[r]) targetRows.add(r);
-        });
-
-        // Cell-selected rows in same column (legacy method)
-        if (SELECTED_CELLS.size > 0 && col >= 0) {
+        // Cell-selected rows in same column (click, shift+click, column select)
+        if (SELECTED_CELLS.size > 1 && col >= 0) {
             SELECTED_CELLS.forEach(id => {
                 const [r, c] = id.split('-').map(Number);
                 if (c === col && LIB_DATA[r] && r !== idx) targetRows.add(r);
             });
         }
+
+        // Checkbox-selected rows
+        document.querySelectorAll('.lib-row-check:checked').forEach(cb => {
+            const r = parseInt(cb.dataset.idx);
+            if (r !== idx && LIB_DATA[r]) targetRows.add(r);
+        });
 
         // Apply value to all target rows
         if (targetRows.size > 0 && col >= 0) {
@@ -1939,20 +1970,20 @@
         head.innerHTML = `<th class="pb-2 pr-1 w-6"><input type="checkbox" onchange="toggleSelectAll(this.checked)" class="accent-dune cursor-pointer"></th>` + template.map(key => {
             const f = NAMING_FIELDS[key];
             const label = f ? f.label : key;
-            return `<th class="pb-2 pr-2 font-medium text-ash text-xs cursor-pointer hover:text-obsidian select-none" onclick="sortLibrary('${key}')">${label}${sortArrow(key)}</th>`;
+            return `<th class="pb-2 pr-2 font-medium text-ash text-xs cursor-pointer hover:text-obsidian select-none" onclick="if(event.shiftKey){selectColumn(${template.indexOf(key)})}else{sortLibrary('${key}')}" title="Click to sort, Shift+click to select column">${label}${sortArrow(key)}</th>`;
         }).join('') + `<th class="pb-2 pr-2 font-medium text-ash text-xs cursor-pointer hover:text-obsidian select-none" onclick="sortLibrary('created_at')">Date${sortArrow('created_at')}</th><th class="pb-2 font-medium text-ash text-xs">Ad Name</th><th></th>`;
 
         tbody.innerHTML = LIB_DATA.map((item, idx) => {
             const cells = template.map((key, col) => {
                 const val = item[key] || '';
                 const dKey = DROPDOWN_MAP[key];
-                const clickHandler = `onclick="cellClick(event,${idx},${col},'${key}')"`;
+                const sel = `onfocus="cellClick(event,${idx},${col},'${key}')" onclick="cellClick(event,${idx},${col},'${key}')"`;
 
                 if (dKey && DROPDOWN_OPTIONS[dKey]) {
-                    return `<td ${clickHandler}>${makeDropdown(dKey, val, idx, key, col)}</td>`;
+                    return `<td>${makeDropdown(dKey, val, idx, key, col, sel)}</td>`;
                 }
 
-                return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
+                return `<td><input type="text" value="${escAttr(val)}" ${sel} oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
             }).join('');
 
             return `<tr class="border-b border-rule/50 hover:bg-cream/50" data-lib-idx="${idx}">
