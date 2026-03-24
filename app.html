@@ -71,10 +71,23 @@
         #libraryTable td.cell-selected input,
         #libraryTable td.cell-selected select { background: rgba(184,169,138,0.08); }
 
+        /* Skeleton shimmer */
+        .skeleton { background: linear-gradient(90deg, #F0EBE3 25%, #E8E3DB 50%, #F0EBE3 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
         .file-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #F0EBE3; border: 1px solid #D6D1CA; border-radius: 5px; font-size: 13px; }
         .file-row .name { flex: 1; color: #2C2C2C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .file-row .remove { color: #BFBAB3; cursor: pointer; }
         .file-row .remove:hover { color: #C0392B; }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .import-tab svg { display: none; }
+            .import-tab { padding: 8px 10px; font-size: 12px; }
+            #libraryTable { font-size: 12px; }
+            #libraryTable td input,
+            #libraryTable td select { font-size: 12px; }
+        }
     </style>
 </head>
 <body class="bg-parchment text-obsidian antialiased min-h-screen font-sans">
@@ -137,9 +150,9 @@
         <!-- Library Tab -->
         <div id="appTab-library" class="hidden">
             <!-- Controls -->
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div class="flex gap-2">
-                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-56">
+                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-full sm:w-56">
                     <select id="libraryFormatFilter" onchange="loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian">
                         <option value="">All formats</option>
                         <option value="video">Video</option>
@@ -214,7 +227,7 @@
 
         <!-- Analyze Tab (existing content) -->
         <div id="appTab-analyze">
-        <div class="grid lg:grid-cols-[1fr_340px] gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 
             <!-- Main Column -->
             <div>
@@ -355,6 +368,13 @@
                 </div>
 
                 <!-- Results -->
+                <div id="analyzeEmpty" class="text-center py-12 text-ash">
+                    <div class="w-16 h-16 rounded-2xl bg-cream border border-rule flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    </div>
+                    <p class="text-charcoal font-medium mb-1">Ready to analyze</p>
+                    <p class="text-sm text-stone max-w-xs mx-auto">Upload a file, paste a URL, or connect an integration above to classify your first creative.</p>
+                </div>
                 <div id="resultsContainer"></div>
 
                 <!-- Batch Results Table -->
@@ -392,8 +412,8 @@
             </div>
 
             <!-- Sidebar: History -->
-            <aside>
-                <div class="sticky top-20">
+            <aside class="lg:block">
+                <div class="lg:sticky lg:top-20">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-sm text-ash uppercase tracking-wider">History</h3>
                         <button onclick="clearHistory()" class="text-xs text-stone hover:text-ash transition">Clear</button>
@@ -569,6 +589,7 @@
         // Generate thumbnail
         generateThumb(file).then(thumb => { item.thumb = thumb; });
         QUEUE.items.unshift(item);
+        document.getElementById('analyzeEmpty').classList.add('hidden');
         renderQueue();
         processQueue();
     }
@@ -785,6 +806,7 @@
     function renderSingleResult(data, filename) {
         const c = document.getElementById('resultsContainer');
         document.getElementById('batchContainer').classList.add('hidden');
+        document.getElementById('analyzeEmpty').classList.add('hidden');
         const v = data.attributes || {};
         const a = data.attributes || {};
         const n = data.naming || {};
@@ -967,6 +989,7 @@
     // --- Render Batch ---
     function renderBatchResults(results) {
         document.getElementById('resultsContainer').innerHTML = '';
+        document.getElementById('analyzeEmpty').classList.add('hidden');
         const container = document.getElementById('batchContainer');
         container.classList.remove('hidden');
         const tbody = document.getElementById('batchTableBody');
@@ -1089,6 +1112,7 @@
         document.getElementById('loadingText').textContent = text;
         document.getElementById('resultsContainer').innerHTML = '';
         document.getElementById('batchContainer').classList.add('hidden');
+        document.getElementById('analyzeEmpty').classList.add('hidden');
     }
 
     function hideLoading() { document.getElementById('loadingState').classList.add('hidden'); }
@@ -1839,6 +1863,16 @@
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    function showLibrarySkeleton() {
+        const tbody = document.getElementById('libraryTableBody');
+        const cols = getNamingTemplate().length + 3;
+        tbody.innerHTML = Array.from({ length: 6 }, () =>
+            `<tr class="border-b border-rule/50">${Array.from({ length: cols }, () =>
+                `<td class="py-3 px-2"><div class="skeleton h-4 w-full">&nbsp;</div></td>`
+            ).join('')}</tr>`
+        ).join('');
+    }
+
     async function loadLibrary() {
         const key = getApiKey();
         if (!key) return;
@@ -1848,6 +1882,7 @@
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (format) url += `&format=${encodeURIComponent(format)}`;
 
+        showLibrarySkeleton();
         try {
             const resp = await fetch(url);
             const data = await resp.json();
@@ -1923,7 +1958,10 @@
                             </button>
                         </div>
                     </td>
-                    <td class="py-2 pl-1"><button onclick="viewLibraryItem(${item.id})" class="text-dune hover:text-obsidian text-[10px]">View</button></td>
+                    <td class="py-2 pl-1 whitespace-nowrap">
+                        <button onclick="viewLibraryItem(${item.id})" class="text-dune hover:text-obsidian text-[10px]">View</button>
+                        <button onclick="deleteLibraryItem(${item.id},this)" class="text-stone hover:text-red-500 text-[10px] ml-1" title="Delete">&#10005;</button>
+                    </td>
                 </tr>`;
             }).join('');
         } catch (e) {
@@ -1933,16 +1971,31 @@
 
     function exportLibraryCSV() {
         if (!LIB_DATA.length) return showToast('No data to export', 'error');
-        const sep = document.getElementById('librarySeparator').value;
-        const headers = ['Creative Name','Format','Hook Type','Messaging Angle','Creative Type','Visual Style','CTA','Emotion','Date','Ad Name'];
-        const rows = LIB_DATA.map(item => [
-            item.filename, item.format, item.hook_type, item.messaging_angle,
-            item.creative_type, item.visual_style, item.cta_type, item.emotion,
-            item.created_at, buildAdName(item),
-        ]);
+        const template = getNamingTemplate();
+        const headers = template.map(key => NAMING_FIELDS[key]?.label || key).concat(['Date', 'Ad Name']);
+        const rows = LIB_DATA.map(item => {
+            const vals = template.map(key => {
+                const field = NAMING_FIELDS[key];
+                return field ? (field.getValue(item) || '') : (item[key] || '');
+            });
+            return vals.concat([item.created_at || '', buildAdName(item)]);
+        });
         const csv = [headers, ...rows].map(row => row.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
         downloadFile(csv, 'creative-tagger-library.csv', 'text/csv');
         showToast('Library exported');
+    }
+
+    async function deleteLibraryItem(id, btn) {
+        if (!confirm('Delete this creative from your library?')) return;
+        const key = getApiKey();
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library/${id}?api_key=${key}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error();
+            btn.closest('tr').remove();
+            showToast('Deleted');
+        } catch {
+            showToast('Delete failed', 'error');
+        }
     }
 
     async function viewLibraryItem(id) {
