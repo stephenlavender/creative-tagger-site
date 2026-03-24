@@ -143,8 +143,8 @@
         <!-- App Navigation -->
         <div class="flex gap-1 mb-6 border-b border-rule">
             <button onclick="switchAppTab('analyze')" data-apptab="analyze" class="app-tab app-tab-active px-5 py-2.5 text-sm font-medium border-b-2 transition">Analyze</button>
-            <button onclick="switchAppTab('library')" data-apptab="library" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Library</button>
-            <button onclick="switchAppTab('patterns')" data-apptab="patterns" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Patterns</button>
+            <button onclick="switchAppTab('library')" data-apptab="library" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Library <span id="libraryBadge" class="hidden text-[10px] bg-cream border border-rule rounded-full px-1.5 py-0.5 text-stone ml-1"></span></button>
+            <button onclick="switchAppTab('patterns')" data-apptab="patterns" class="app-tab px-5 py-2.5 text-sm font-medium border-b-2 border-transparent text-ash hover:text-obsidian transition">Patterns <span id="patternsBadge" class="hidden text-[10px] bg-cream border border-rule rounded-full px-1.5 py-0.5 text-stone ml-1"></span></button>
         </div>
 
         <!-- Library Tab -->
@@ -281,7 +281,7 @@
                     <div id="tab-url" class="tab-content hidden">
                         <div class="bg-cream border border-rule border-t-0 rounded-b-2xl p-6">
                             <div class="flex gap-3">
-                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." class="flex-1 bg-cream border border-rule rounded-xl px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                                <input type="text" id="urlInput" placeholder="Paste a video URL, image URL, or landing page URL..." onkeydown="if(event.key==='Enter')analyzeUrl()" class="flex-1 bg-cream border border-rule rounded-xl px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
                                 <button onclick="analyzeUrl()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-3 rounded-xl text-sm transition">Analyze</button>
                             </div>
                             <p class="text-stone text-xs mt-3">Supports direct file URLs (video, image) and landing page URLs for screenshot analysis.</p>
@@ -672,9 +672,16 @@
             next.result = data;
             STATE.results.push({ filename: next.filename, ...data });
             loadServerHistory(); // Refresh sidebar from server
+
+            // Auto-show result if this is the only/last item
+            const pending = QUEUE.items.filter(i => i.status === 'queued' || i.status === 'analyzing');
+            if (pending.length <= 1) {
+                renderSingleResult(data, next.filename);
+            }
         } catch (err) {
             next.status = 'error';
             next.error = err.message;
+            showToast('Analysis failed: ' + (err.message || 'Unknown error'), 'error');
         }
 
         QUEUE.active--;
@@ -1967,6 +1974,9 @@
             const data = await resp.json();
             const empty = document.getElementById('libraryEmpty');
             document.getElementById('libraryCount').textContent = `${data.total} creatives`;
+            const libBadge = document.getElementById('libraryBadge');
+            if (data.total > 0) { libBadge.textContent = data.total; libBadge.classList.remove('hidden'); }
+            else { libBadge.classList.add('hidden'); }
 
             if (!data.items.length) {
                 document.getElementById('libraryTableHead').innerHTML = '';
@@ -2180,7 +2190,13 @@
                 <div class="flex flex-wrap gap-1">${v.social_proof_elements.map(s => `<span class="tag text-[11px]">${s}</span>`).join('')}</div>
             </div>` : ''}
 
-            <div class="text-xs text-stone text-right">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</div>
+            <div class="flex items-center justify-between mt-2">
+                <button onclick="reAnalyze(${data.id || 0})" class="text-xs text-dune hover:text-obsidian transition flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Re-analyze
+                </button>
+                <span class="text-xs text-stone">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</span>
+            </div>
         </div>`;
 
         // Update prev/next button states
@@ -2190,6 +2206,20 @@
         nextBtn.disabled = _detailIdx >= LIB_DATA.length - 1;
 
         document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function reAnalyze(id) {
+        const item = LIB_DATA.find(i => i.id === id) || {};
+        const filename = item.filename || '';
+        if (filename.startsWith('http')) {
+            closeDetail();
+            queueAnalysis(filename, true);
+            showToast('Re-analyzing...');
+        } else {
+            closeDetail();
+            switchAppTab('analyze');
+            showToast('Upload the file again to re-analyze');
+        }
     }
 
     function closeDetail() {
@@ -2205,6 +2235,10 @@
             const data = await resp.json();
             const content = document.getElementById('patternsContent');
             const empty = document.getElementById('patternsEmpty');
+
+            const patBadge = document.getElementById('patternsBadge');
+            if (data.total >= 3) { patBadge.textContent = data.total; patBadge.classList.remove('hidden'); }
+            else { patBadge.classList.add('hidden'); }
 
             if (data.total < 3) {
                 content.innerHTML = '';
