@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creative Tagger — Dashboard</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+    <script>window.tailwindCSS={suppressWarning:true}</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key=""></script>
     <script>
@@ -103,7 +104,7 @@
                 <button id="authBtn" onclick="showAuth()" class="text-dune hover:text-obsidian transition text-sm font-medium">Sign Up / Log In</button>
                 <div id="userNav" class="hidden flex items-center gap-3">
                     <div id="usageBadge" class="text-xs bg-cream border border-rule px-2.5 py-1 rounded-full text-ash">
-                        <span id="usageCount">0</span> / <span id="usageLimit">100</span> this month
+                        <span id="usageCount">0</span> / <span id="usageLimit">25</span> this month
                     </div>
                     <span id="authUser" class="text-sm text-ash"></span>
                     <button onclick="showSettings()" class="text-ash hover:text-obsidian transition" title="Settings">
@@ -118,7 +119,7 @@
     <!-- Auth Gate -->
     <div id="authGate" class="max-w-md mx-auto mt-24 text-center px-6">
         <h1 class="font-display text-4xl font-normal mb-3">Creative Tagger</h1>
-        <p class="text-ash mb-8">Classify any creative across every dimension. Sign up free.</p>
+        <p class="text-ash mb-8">Classify any creative across every dimension. 25 free analyses/month.</p>
         <div id="gateSignup">
             <div class="space-y-3 text-left">
                 <input type="email" id="gateEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-4 py-3 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
