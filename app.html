@@ -1798,30 +1798,55 @@
     // --- Cell selection + bulk edit ---
     const SELECTED_CELLS = new Set(); // "row-col" strings
     let _lastClickedCell = null;
-    let _selectedCol = null; // track which column is selected for propagation
+    let _selectedCol = null;
 
     function cellClick(event, row, col, field) {
-        // Don't clear selection if just focusing an input
         event.stopPropagation();
         const cellId = `${row}-${col}`;
         if (event.shiftKey && _lastClickedCell) {
             // Range select down the column
-            const [startRow] = _lastClickedCell.split('-').map(Number);
+            const [startRow, startCol] = _lastClickedCell.split('-').map(Number);
+            const targetCol = startCol; // keep the column from first click
             const minRow = Math.min(startRow, row);
             const maxRow = Math.max(startRow, row);
             for (let r = minRow; r <= maxRow; r++) {
-                SELECTED_CELLS.add(`${r}-${col}`);
+                SELECTED_CELLS.add(`${r}-${targetCol}`);
             }
+            _selectedCol = targetCol;
         } else if (event.metaKey || event.ctrlKey) {
             if (SELECTED_CELLS.has(cellId)) SELECTED_CELLS.delete(cellId);
             else SELECTED_CELLS.add(cellId);
+            _selectedCol = col;
         } else {
-            SELECTED_CELLS.clear();
-            SELECTED_CELLS.add(cellId);
+            // Plain click — only clear if not clicking into an already-selected cell
+            if (!SELECTED_CELLS.has(cellId) || SELECTED_CELLS.size <= 1) {
+                SELECTED_CELLS.clear();
+                SELECTED_CELLS.add(cellId);
+            }
+            _selectedCol = col;
         }
         _lastClickedCell = cellId;
-        _selectedCol = col;
         renderCellSelection();
+    }
+
+    // Called on focus — registers cell without clearing selection
+    function cellFocus(event, row, col, field) {
+        const cellId = `${row}-${col}`;
+        // If we have a multi-selection and this cell is in it, don't touch anything
+        if (SELECTED_CELLS.size > 1 && SELECTED_CELLS.has(cellId)) return;
+        // If shift is held during tab/focus, extend selection
+        if (event && event.shiftKey && _lastClickedCell) {
+            cellClick(event, row, col, field);
+            return;
+        }
+        // Otherwise just track for _lastClickedCell without clearing
+        if (SELECTED_CELLS.size <= 1) {
+            SELECTED_CELLS.clear();
+            SELECTED_CELLS.add(cellId);
+            _lastClickedCell = cellId;
+            _selectedCol = col;
+            renderCellSelection();
+        }
     }
 
     function selectColumn(col) {
@@ -1910,6 +1935,38 @@
 
         const nameCell = document.getElementById(`lib-adname-${idx}`);
         if (nameCell) nameCell.textContent = buildAdName(LIB_DATA[idx]);
+
+        // Queue save to server
+        const allChanged = [idx, ...targetRows];
+        allChanged.forEach(r => queueLibSave(r, field, value));
+    }
+
+    // --- Debounced server save ---
+    const _pendingSaves = {}; // idx -> {id, fields}
+    let _saveTimer = null;
+
+    function queueLibSave(idx, field, value) {
+        const item = LIB_DATA[idx];
+        if (!item || !item.id) return;
+        if (!_pendingSaves[idx]) _pendingSaves[idx] = { id: item.id };
+        _pendingSaves[idx][field] = value;
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(flushLibSaves, 1000);
+    }
+
+    async function flushLibSaves() {
+        const key = getApiKey();
+        if (!key) return;
+        const items = Object.values(_pendingSaves);
+        if (!items.length) return;
+        Object.keys(_pendingSaves).forEach(k => delete _pendingSaves[k]);
+        try {
+            await fetch(getEndpoint() + `/auth/library?api_key=${key}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(items),
+            });
+        } catch {}
     }
 
     function updateLibFilename(idx, value) {
@@ -1977,13 +2034,14 @@
             const cells = template.map((key, col) => {
                 const val = item[key] || '';
                 const dKey = DROPDOWN_MAP[key];
-                const sel = `onfocus="cellClick(event,${idx},${col},'${key}')" onclick="cellClick(event,${idx},${col},'${key}')"`;
+                const focusH = `onfocus="cellFocus(event,${idx},${col},'${key}')"`;
+                const clickH = `onclick="cellClick(event,${idx},${col},'${key}')"`;
 
                 if (dKey && DROPDOWN_OPTIONS[dKey]) {
-                    return `<td>${makeDropdown(dKey, val, idx, key, col, sel)}</td>`;
+                    return `<td ${clickH}>${makeDropdown(dKey, val, idx, key, col, focusH + ' ' + clickH)}</td>`;
                 }
 
-                return `<td><input type="text" value="${escAttr(val)}" ${sel} oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
+                return `<td ${clickH}><input type="text" value="${escAttr(val)}" ${focusH} ${clickH} oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
             }).join('');
 
             return `<tr class="border-b border-rule/50 hover:bg-cream/50" data-lib-idx="${idx}">
