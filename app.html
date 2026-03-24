@@ -2011,6 +2011,10 @@
 
     function toggleSelectAll(checked) {
         document.querySelectorAll('.lib-row-check').forEach(cb => cb.checked = checked);
+        const headerCb = document.querySelector('#libraryTableHead input[type="checkbox"]');
+        if (headerCb) { headerCb.checked = checked; headerCb.indeterminate = false; }
+        SELECTED_CELLS.clear();
+        renderCellSelection();
         updateBulkBar();
     }
 
@@ -2019,7 +2023,14 @@
     }
 
     function updateBulkBar() {
-        const count = document.querySelectorAll('.lib-row-check:checked').length;
+        const all = document.querySelectorAll('.lib-row-check');
+        const checked = document.querySelectorAll('.lib-row-check:checked');
+        const count = checked.length;
+        const headerCb = document.querySelector('#libraryTableHead input[type="checkbox"]');
+        if (headerCb) {
+            headerCb.checked = count > 0 && count === all.length;
+            headerCb.indeterminate = count > 0 && count < all.length;
+        }
         let bar = document.getElementById('bulkBar');
         if (count > 0) {
             if (!bar) {
@@ -2464,6 +2475,10 @@
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            // Clear selections first if any are active
+            const checked = document.querySelectorAll('.lib-row-check:checked');
+            if (checked.length) { toggleSelectAll(false); return; }
+            if (SELECTED_CELLS.size) { SELECTED_CELLS.clear(); renderCellSelection(); return; }
             hideSettings();
             hideAuth();
             hideUpgrade();
