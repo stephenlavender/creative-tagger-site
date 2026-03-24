@@ -1,0 +1,27 @@
+{
+  "name": "site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "middleware.js",
+  "scripts": {
+    "build:css": "tailwindcss --input input.css --output styles.css --minify",
+    "watch:css": "tailwindcss --input input.css --output styles.css --watch",
+    "build": "npm run build:css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stephenlavender/creative-tagger-site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/stephenlavender/creative-tagger-site/issues"
+  },
+  "homepage": "https://github.com/stephenlavender/creative-tagger-site#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2"
+  }
+}
