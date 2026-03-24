@@ -152,7 +152,7 @@
             <!-- Controls -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div class="flex gap-2">
-                    <input type="text" id="librarySearch" placeholder="Search creatives..." onkeyup="if(event.key==='Enter')loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-full sm:w-56">
+                    <input type="text" id="librarySearch" placeholder="Search creatives..." oninput="debouncedLibrarySearch()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition w-full sm:w-56">
                     <select id="libraryFormatFilter" onchange="loadLibrary()" class="bg-cream border border-rule rounded-lg px-3 py-2 text-sm text-obsidian">
                         <option value="">All formats</option>
                         <option value="video">Video</option>
@@ -173,6 +173,7 @@
                             <option value=".">.</option>
                         </select>
                     </div>
+                    <button onclick="copyAllLibraryNames()" class="bg-cream hover:bg-dune-light border border-rule text-xs px-3 py-1.5 rounded-lg transition text-charcoal">Copy Names</button>
                     <button onclick="exportLibraryCSV()" class="bg-cream hover:bg-dune-light border border-rule text-xs px-3 py-1.5 rounded-lg transition text-charcoal">Export CSV</button>
                     <span id="libraryCount" class="text-xs text-stone"></span>
                 </div>
@@ -546,7 +547,7 @@
 
     // --- Init ---
     function init() {
-        renderHistory();
+        renderSidebar();
         const brand = STATE.settings.defaultBrand;
         if (brand) document.getElementById('brandInput').value = brand;
     }
@@ -590,7 +591,7 @@
         generateThumb(file).then(thumb => { item.thumb = thumb; });
         QUEUE.items.unshift(item);
         document.getElementById('analyzeEmpty').classList.add('hidden');
-        renderQueue();
+        renderSidebar();
         processQueue();
     }
 
@@ -645,7 +646,7 @@
 
         next.status = 'analyzing';
         QUEUE.active++;
-        renderQueue();
+        renderSidebar();
 
         const formData = new FormData();
         formData.append('file', next.file);
@@ -663,22 +664,22 @@
         }
 
         QUEUE.active--;
-        renderQueue();
+        renderSidebar();
         processQueue(); // Process next in queue
     }
 
-    function renderQueue() {
+    function renderSidebar() {
         const list = document.getElementById('historyList');
         let html = '';
 
-        // Active queue items (processing)
+        // Active queue items (processing/queued)
         const active = QUEUE.items.filter(i => i.status !== 'done');
         if (active.length) {
             html += active.map(item => {
                 const statusIcon = item.status === 'analyzing'
                     ? `<div class="w-2 h-2 rounded-full bg-dune animate-pulse"></div>`
                     : item.status === 'error'
-                    ? `<div class="w-2 h-2 rounded-full" style="background:#C0392B"></div>`
+                    ? `<div class="w-2 h-2 rounded-full" style="background:#8B4513"></div>`
                     : `<div class="w-2 h-2 rounded-full bg-stone"></div>`;
                 const statusText = item.status === 'analyzing' ? 'Analyzing'
                     : item.status === 'error' ? 'Failed'
@@ -695,7 +696,7 @@
             }).join('');
         }
 
-        // Recently completed from queue
+        // Recently completed from queue (show at top before server history)
         const done = QUEUE.items.filter(i => i.status === 'done').slice(0, 3);
         done.forEach(item => {
             if (item.result) {
@@ -711,8 +712,8 @@
             }
         });
 
-        // Server-side history
-        if (STATE.serverHistory) {
+        // Server-side history (source of truth for logged-in users)
+        if (STATE.serverHistory && STATE.serverHistory.length) {
             STATE.serverHistory.forEach(h => {
                 html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-dune transition mb-2" onclick="viewLibraryItem(${h.id})">
                     <div class="flex items-center justify-between">
@@ -721,6 +722,18 @@
                     </div>
                     ${h.naming_default ? `<div class="font-mono text-[10px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
                     <div class="text-[10px] text-stone mt-1">${timeAgo(h.created_at)}</div>
+                </div>`;
+            });
+        } else if (!getApiKey() && STATE.history.length) {
+            // Fallback: show localStorage history for logged-out users
+            STATE.history.forEach(h => {
+                html += `<div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-rule transition mb-2" onclick="copyText('${escAttr(h.naming_default || '')}')">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-ash truncate max-w-[160px]">${escHtml(h.filename)}</span>
+                        <span class="tag text-[11px]">${h.format || ''}</span>
+                    </div>
+                    ${h.naming_default ? `<div class="font-mono text-[11px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
+                    <div class="text-[10px] text-stone mt-1">${timeAgo(h.timestamp)}</div>
                 </div>`;
             });
         }
@@ -737,7 +750,7 @@
             if (resp.ok) {
                 const data = await resp.json();
                 STATE.serverHistory = data.items || [];
-                renderQueue();
+                renderSidebar();
             }
         } catch {}
     }
@@ -1011,41 +1024,28 @@
 
     // --- History ---
     function addToHistory(data, filename) {
-        const entry = {
-            id: Date.now(),
-            filename,
-            format: data.format,
-            hook_type: data.attributes?.hook_type,
-            naming_default: data.naming?.standard,
-            timestamp: new Date().toISOString(),
-        };
-        STATE.history.unshift(entry);
-        if (STATE.history.length > 50) STATE.history = STATE.history.slice(0, 50);
-        localStorage.setItem('ct_history', JSON.stringify(STATE.history));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList');
-        if (!STATE.history.length) {
-            list.innerHTML = '<p class="text-stone text-sm py-8 text-center">No analyses yet</p>';
-            return;
+        // Only use localStorage for logged-out fallback
+        if (!getApiKey()) {
+            const entry = {
+                id: Date.now(),
+                filename,
+                format: data.format,
+                hook_type: data.attributes?.hook_type,
+                naming_default: data.naming?.standard,
+                timestamp: new Date().toISOString(),
+            };
+            STATE.history.unshift(entry);
+            if (STATE.history.length > 50) STATE.history = STATE.history.slice(0, 50);
+            localStorage.setItem('ct_history', JSON.stringify(STATE.history));
         }
-        list.innerHTML = STATE.history.map(h => `
-        <div class="bg-cream border border-rule rounded-lg p-3 cursor-pointer hover:border-rule transition" onclick="copyText('${escAttr(h.naming_default || '')}')">
-            <div class="flex items-center justify-between">
-                <span class="text-xs text-ash truncate max-w-[180px]">${escHtml(h.filename)}</span>
-                <span class="tag text-[11px]">${h.format || ''}</span>
-            </div>
-            ${h.naming_default ? `<div class="font-mono text-[11px] text-stone mt-1 truncate">${escHtml(h.naming_default)}</div>` : ''}
-            <div class="text-[10px] text-stone mt-1">${timeAgo(h.timestamp)}</div>
-        </div>`).join('');
+        renderSidebar();
     }
 
     function clearHistory() {
         STATE.history = [];
         localStorage.setItem('ct_history', '[]');
-        renderHistory();
+        STATE.serverHistory = [];
+        renderSidebar();
     }
 
     // --- Export ---
@@ -1120,7 +1120,7 @@
     function showToast(msg, type = 'success') {
         const c = document.getElementById('toastContainer');
         const el = document.createElement('div');
-        el.className = `toast px-4 py-2.5 rounded-lg text-sm font-medium ${type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/20' : 'bg-cream text-deep border border-dune'}`;
+        el.className = `toast px-4 py-2.5 rounded-lg text-sm font-medium ${type === 'error' ? 'bg-cream text-charcoal border border-stone' : 'bg-cream text-deep border border-dune'}`;
         el.textContent = msg;
         c.appendChild(el);
         setTimeout(() => el.remove(), 2000);
@@ -1591,6 +1591,11 @@
 
     // --- Library ---
     let LIB_DATA = [];
+    let _searchTimer = null;
+    function debouncedLibrarySearch() {
+        clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(loadLibrary, 300);
+    }
 
     const DROPDOWN_OPTIONS = {
         hook_type: ['Question','Bold Claim','Callout','Contrarian','Confession','If Then','Statistic','Urgency','Curiosity Gap','Social Proof','Pain Point','Transformation','Challenge','Story Open','Pattern Interrupt'],
@@ -1969,6 +1974,12 @@
         }
     }
 
+    function copyAllLibraryNames() {
+        if (!LIB_DATA.length) return showToast('No data to copy', 'error');
+        const names = LIB_DATA.map(item => buildAdName(item)).join('\n');
+        copyText(names);
+    }
+
     function exportLibraryCSV() {
         if (!LIB_DATA.length) return showToast('No data to export', 'error');
         const template = getNamingTemplate();
@@ -2276,8 +2287,15 @@
         }
     }
 
-    // Enter key support
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideSettings();
+            hideAuth();
+            hideUpgrade();
+            closeDetail();
+            return;
+        }
         if (e.key !== 'Enter') return;
         if (document.getElementById('gateEmail') === document.activeElement ||
             document.getElementById('gatePassword') === document.activeElement) doGateSignup();
