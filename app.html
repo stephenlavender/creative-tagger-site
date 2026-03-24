@@ -211,6 +211,12 @@
                     <tbody id="libraryTableBody"></tbody>
                 </table>
             </div>
+            <!-- Pagination -->
+            <div id="libraryPagination" class="hidden flex items-center justify-between mt-4">
+                <button onclick="libPrevPage()" id="libPrevBtn" class="text-xs text-dune hover:text-obsidian transition disabled:opacity-30 disabled:cursor-default" disabled>&larr; Previous</button>
+                <span id="libPageInfo" class="text-xs text-stone"></span>
+                <button onclick="libNextPage()" id="libNextBtn" class="text-xs text-dune hover:text-obsidian transition disabled:opacity-30 disabled:cursor-default" disabled>Next &rarr;</button>
+            </div>
             <div id="libraryEmpty" class="hidden text-center py-16 text-ash">
                 <p class="text-lg mb-2">No creatives yet</p>
                 <p class="text-sm">Upload your first creative in the Analyze tab.</p>
@@ -1593,6 +1599,9 @@
     let _searchTimer = null;
     let _sortCol = null;
     let _sortAsc = true;
+    const LIB_PAGE_SIZE = 50;
+    let _libOffset = 0;
+    let _libTotal = 0;
 
     function debouncedLibrarySearch() {
         clearTimeout(_searchTimer);
@@ -2064,12 +2073,13 @@
         }).join('');
     }
 
-    async function loadLibrary() {
+    async function loadLibrary(resetPage = true) {
         const key = getApiKey();
         if (!key) return;
+        if (resetPage) _libOffset = 0;
         const search = document.getElementById('librarySearch').value.trim();
         const format = document.getElementById('libraryFormatFilter').value;
-        let url = getEndpoint() + `/auth/library?api_key=${key}&limit=100`;
+        let url = getEndpoint() + `/auth/library?api_key=${key}&limit=${LIB_PAGE_SIZE}&offset=${_libOffset}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (format) url += `&format=${encodeURIComponent(format)}`;
 
@@ -2077,6 +2087,7 @@
         try {
             const resp = await fetch(url);
             const data = await resp.json();
+            _libTotal = data.total;
             const empty = document.getElementById('libraryEmpty');
             document.getElementById('libraryCount').textContent = `${data.total} creatives`;
             const libBadge = document.getElementById('libraryBadge');
@@ -2087,15 +2098,38 @@
                 document.getElementById('libraryTableHead').innerHTML = '';
                 document.getElementById('libraryTableBody').innerHTML = '';
                 empty.classList.remove('hidden');
+                document.getElementById('libraryPagination').classList.add('hidden');
                 return;
             }
             empty.classList.add('hidden');
             LIB_DATA = data.items;
-            _sortCol = null;
+            if (resetPage) _sortCol = null;
             renderLibraryTable();
+            renderLibPagination();
         } catch (e) {
             console.error('Library load failed:', e);
         }
+    }
+
+    function renderLibPagination() {
+        const pag = document.getElementById('libraryPagination');
+        if (_libTotal <= LIB_PAGE_SIZE) { pag.classList.add('hidden'); return; }
+        pag.classList.remove('hidden');
+        const page = Math.floor(_libOffset / LIB_PAGE_SIZE) + 1;
+        const totalPages = Math.ceil(_libTotal / LIB_PAGE_SIZE);
+        document.getElementById('libPageInfo').textContent = `Page ${page} of ${totalPages}`;
+        document.getElementById('libPrevBtn').disabled = _libOffset === 0;
+        document.getElementById('libNextBtn').disabled = _libOffset + LIB_PAGE_SIZE >= _libTotal;
+    }
+
+    function libPrevPage() {
+        _libOffset = Math.max(0, _libOffset - LIB_PAGE_SIZE);
+        loadLibrary(false);
+    }
+
+    function libNextPage() {
+        _libOffset += LIB_PAGE_SIZE;
+        loadLibrary(false);
     }
 
     function toggleSelectAll(checked) {
@@ -2407,9 +2441,42 @@
             }
             empty.classList.add('hidden');
 
-            let html = `<div class="text-sm text-ash mb-4">${data.total} creatives analyzed</div>`;
+            // --- Summary cards ---
+            const dims = data.dimensions || {};
+            const topDims = Object.entries(dims).filter(([,d]) => d.top).slice(0, 4);
+            let html = `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div class="bg-cream border border-rule rounded-xl p-4 text-center">
+                    <div class="text-2xl font-bold font-display text-obsidian">${data.total}</div>
+                    <div class="text-[10px] text-stone uppercase tracking-wider mt-1">Creatives</div>
+                </div>
+                ${topDims.map(([dim, d]) => {
+                    const label = dim.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    return `<div class="bg-cream border border-rule rounded-xl p-4 text-center">
+                        <div class="text-lg font-semibold text-obsidian">${escHtml(d.top)}</div>
+                        <div class="text-[10px] text-stone uppercase tracking-wider mt-1">Top ${label}</div>
+                        <div class="text-[10px] text-dune mt-0.5">${d.top_pct}% of library</div>
+                    </div>`;
+                }).join('')}
+            </div>`;
 
-            // Insights
+            // --- Top combos ---
+            if (dims.hook_type && dims.creative_type) {
+                const hooks = Object.keys(dims.hook_type.distribution || {}).slice(0, 3);
+                const types = Object.keys(dims.creative_type.distribution || {}).slice(0, 3);
+                if (hooks.length && types.length) {
+                    html += `<div class="bg-cream border border-rule rounded-xl p-5 mb-6">
+                        <h3 class="eyebrow mb-3">Top Combinations</h3>
+                        <div class="flex flex-wrap gap-2">
+                            ${hooks.flatMap(h => types.slice(0, 2).map(t =>
+                                `<span class="tag text-[11px]">${h} + ${t}</span>`
+                            )).join('')}
+                        </div>
+                        <p class="text-[10px] text-stone mt-2">Your most common hook + format pairings</p>
+                    </div>`;
+                }
+            }
+
+            // --- Insights ---
             if (data.insights && data.insights.length) {
                 html += `<div class="bg-cream border border-rule rounded-xl p-5 mb-6">
                     <h3 class="eyebrow mb-3">Insights</h3>
@@ -2419,7 +2486,7 @@
                 </div>`;
             }
 
-            // Dimension breakdowns
+            // --- Dimension breakdowns ---
             html += '<div class="grid md:grid-cols-2 gap-4">';
             const dimLabels = {
                 format: 'Format', hook_type: 'Hook Type', visual_style: 'Visual Style',
@@ -2427,20 +2494,24 @@
                 production_type: 'Production', cta_type: 'CTA', emotion: 'Emotion'
             };
             for (const [dim, label] of Object.entries(dimLabels)) {
-                const d = (data.dimensions || {})[dim];
+                const d = dims[dim];
                 if (!d) continue;
                 const dist = d.distribution || {};
                 const max = Math.max(...Object.values(dist));
+                const pct = (cnt) => data.total ? Math.round(cnt / data.total * 100) : 0;
                 html += `<div class="bg-cream border border-rule rounded-xl p-5">
-                    <h3 class="eyebrow mb-3">${label}</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="eyebrow">${label}</h3>
+                        <span class="text-[10px] text-stone">${d.unique} unique</span>
+                    </div>
                     <div class="space-y-1.5">
                         ${Object.entries(dist).map(([val, cnt]) => `
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-charcoal w-24 truncate">${val}</span>
-                            <div class="flex-1 h-2 bg-rule rounded-full overflow-hidden">
+                            <span class="text-xs text-charcoal w-28 truncate" title="${escHtml(val)}">${escHtml(val)}</span>
+                            <div class="flex-1 h-2.5 bg-rule rounded-full overflow-hidden">
                                 <div class="h-full bg-dune rounded-full" style="width:${(cnt/max*100).toFixed(0)}%"></div>
                             </div>
-                            <span class="text-[10px] text-stone w-8 text-right">${cnt}</span>
+                            <span class="text-[10px] text-stone w-14 text-right">${cnt} (${pct(cnt)}%)</span>
                         </div>`).join('')}
                     </div>
                 </div>`;
