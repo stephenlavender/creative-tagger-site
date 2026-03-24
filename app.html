@@ -208,7 +208,7 @@
             <div id="patternsContent"></div>
             <div id="patternsEmpty" class="hidden text-center py-16 text-ash">
                 <p class="text-lg mb-2">Not enough data</p>
-                <p class="text-sm">Analyze 5+ creatives to see patterns.</p>
+                <p class="text-sm">Analyze 3+ creatives to see patterns.</p>
             </div>
         </div>
 
@@ -461,7 +461,7 @@
     <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm" onclick="if(event.target===this)hideAuth()">
         <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md">
             <h2 class="font-display text-2xl font-normal mb-2" id="authTitle">Get your API key</h2>
-            <p class="text-ash text-sm mb-6">Free tier. 100 analyses/month. No credit card.</p>
+            <p class="text-ash text-sm mb-6">Free tier. 25 analyses/month. No credit card.</p>
             <div id="authSignup">
                 <div class="space-y-3">
                     <input type="email" id="authEmail" placeholder="Email" class="w-full bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
@@ -1037,6 +1037,23 @@
         const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
         downloadFile(csv, 'creative-tagger-export.csv', 'text/csv');
         showToast('CSV exported');
+    }
+
+    function exportGoogleSheets() {
+        if (!STATE.results.length) return showToast('No results to export', 'error');
+        const headers = ['Filename', 'Format', 'Asset Type', 'Visual Format', 'Hook Type', 'Talent', 'Audience', 'Messaging Angle', 'CTA', 'Emotion', 'Offer', 'Audio Type', 'Standard Naming', 'Compact Naming'];
+        const rows = STATE.results.filter(r => !r.error).map(r => {
+            const v = r.attributes || {};
+            const n = r.naming || {};
+            return [r.filename, r.format, v.asset_type, v.visual_format, v.hook_type, v.talent, v.audience, v.messaging_angle, v.cta, v.emotion, v.offer_type, v.audio_type, n.standard || '', n.compact || ''];
+        });
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'creative-tagger-export.csv'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV downloaded — open Google Sheets and use File → Import');
     }
 
     function copyAllNaming() {
@@ -1728,7 +1745,6 @@
             return val ? String(val).replace(/ /g, '') : '';
         }).filter(Boolean);
         return parts.join(sep);
-        return name;
     }
 
     // --- Cell selection + bulk edit ---
