@@ -544,6 +544,20 @@
         </div>
     </div>
 
+    <!-- Onboarding Modal -->
+    <div id="onboardModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-obsidian/40 backdrop-blur-sm">
+        <div class="bg-parchment border border-rule rounded-2xl p-8 w-full max-w-md text-center">
+            <div class="text-4xl mb-4" id="onboardIcon"></div>
+            <h2 class="font-display text-2xl font-normal mb-3" id="onboardTitle"></h2>
+            <p class="text-ash text-sm leading-relaxed mb-6" id="onboardBody"></p>
+            <div class="flex justify-center gap-1.5 mb-6" id="onboardDots"></div>
+            <div class="flex gap-3 justify-center">
+                <button onclick="hideOnboarding()" class="px-4 py-2 text-sm text-stone hover:text-obsidian transition">Skip</button>
+                <button onclick="onboardNext()" id="onboardNext" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-2 rounded-xl text-sm transition">Next</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 
@@ -1677,6 +1691,46 @@
 
     function saveNamingTemplate(fields) {
         localStorage.setItem('ct_naming_template', JSON.stringify(fields));
+        syncNamingTemplateToServer(fields);
+    }
+
+    let _namingSyncTimer = null;
+    function syncNamingTemplateToServer(fields) {
+        clearTimeout(_namingSyncTimer);
+        _namingSyncTimer = setTimeout(async () => {
+            const key = getApiKey();
+            if (!key) return;
+            const sep = document.getElementById('librarySeparator')?.value || '_';
+            const template = fields.map(f => `{${f}}`).join(sep);
+            try {
+                await fetch(getEndpoint() + `/auth/naming/templates?api_key=${key}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ template, name: 'dashboard', separator: sep }),
+                });
+            } catch {}
+        }, 1000);
+    }
+
+    async function loadNamingTemplateFromServer() {
+        const key = getApiKey();
+        if (!key) return;
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/naming/templates?api_key=${key}`);
+            const data = await resp.json();
+            const templates = data.templates || [];
+            const dash = templates.find(t => t.name === 'dashboard');
+            if (dash && dash.template) {
+                const fields = dash.template.match(/\{(\w+)\}/g)?.map(m => m.slice(1, -1)) || [];
+                if (fields.length) {
+                    localStorage.setItem('ct_naming_template', JSON.stringify(fields));
+                    if (dash.separator) {
+                        const sepEl = document.getElementById('librarySeparator');
+                        if (sepEl) sepEl.value = dash.separator;
+                    }
+                }
+            }
+        } catch {}
     }
 
     let _dragField = null;
@@ -2385,10 +2439,16 @@
             </div>` : ''}
 
             <div class="flex items-center justify-between mt-2">
-                <button onclick="reAnalyze(${data.id || 0})" class="text-xs text-dune hover:text-obsidian transition flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Re-analyze
-                </button>
+                <div class="flex items-center gap-3">
+                    <button onclick="reAnalyze(${data.id || 0})" class="text-xs text-dune hover:text-obsidian transition flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Re-analyze
+                    </button>
+                    ${data.id ? `<button onclick="shareAnalysis(${data.id})" class="text-xs text-dune hover:text-obsidian transition flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Share
+                    </button>` : ''}
+                </div>
                 <span class="text-xs text-stone">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</span>
             </div>
         </div>`;
@@ -2400,6 +2460,23 @@
         nextBtn.disabled = _detailIdx >= LIB_DATA.length - 1;
 
         document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    async function shareAnalysis(id) {
+        const key = getApiKey();
+        try {
+            const resp = await fetch(getEndpoint() + `/auth/library/${id}/share?api_key=${key}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.url) {
+                navigator.clipboard.writeText(data.url).then(() => {
+                    showToast('Share link copied!');
+                }).catch(() => {
+                    showToast(data.url);
+                });
+            }
+        } catch {
+            showToast('Failed to create share link', 'error');
+        }
     }
 
     function reAnalyze(id) {
@@ -2604,6 +2681,7 @@
             checkAuthGate();
             updateAuthUI();
             showToast('Welcome! Your account is ready.');
+            setTimeout(showOnboarding, 300);
         } catch (e) {
             showGateError('Connection failed');
         }
@@ -2674,11 +2752,75 @@
         }
     });
 
+    // --- Onboarding ---
+    const ONBOARD_STEPS = [
+        {
+            title: 'Welcome to Creative Tagger',
+            body: 'Classify any ad creative — video, image, carousel, landing page, or email — and get structured attributes with standardized naming. In one click.',
+            icon: '🏷️',
+        },
+        {
+            title: 'Upload or paste a URL',
+            body: 'Drop a file, paste a URL, or connect Google Drive / Dropbox / Airtable. The API auto-detects the format and classifies across 28 dimensions.',
+            icon: '📤',
+            action: () => { hideOnboarding(); switchAppTab('analyze'); },
+        },
+        {
+            title: 'Build your library',
+            body: 'Every analysis is saved. Edit attributes inline, build custom naming conventions with drag-and-drop, export to CSV, and spot patterns across your creative mix.',
+            icon: '📊',
+            action: () => { hideOnboarding(); switchAppTab('library'); },
+        },
+    ];
+    let _onboardStep = 0;
+
+    function shouldShowOnboarding() {
+        return !localStorage.getItem('ct_onboarded') && STATE.settings.apiKey;
+    }
+
+    function showOnboarding() {
+        if (!shouldShowOnboarding()) return;
+        _onboardStep = 0;
+        renderOnboardStep();
+        document.getElementById('onboardModal').classList.remove('hidden');
+    }
+
+    function renderOnboardStep() {
+        const step = ONBOARD_STEPS[_onboardStep];
+        const total = ONBOARD_STEPS.length;
+        document.getElementById('onboardIcon').textContent = step.icon;
+        document.getElementById('onboardTitle').textContent = step.title;
+        document.getElementById('onboardBody').textContent = step.body;
+        document.getElementById('onboardDots').innerHTML = ONBOARD_STEPS.map((_, i) =>
+            `<div class="w-2 h-2 rounded-full ${i === _onboardStep ? 'bg-dune' : 'bg-rule'}"></div>`
+        ).join('');
+        document.getElementById('onboardNext').textContent = _onboardStep === total - 1 ? 'Get Started' : 'Next';
+    }
+
+    function onboardNext() {
+        const step = ONBOARD_STEPS[_onboardStep];
+        if (_onboardStep >= ONBOARD_STEPS.length - 1) {
+            hideOnboarding();
+            if (step.action) step.action();
+        } else {
+            _onboardStep++;
+            renderOnboardStep();
+        }
+    }
+
+    function hideOnboarding() {
+        document.getElementById('onboardModal').classList.add('hidden');
+        localStorage.setItem('ct_onboarded', '1');
+    }
+
     init();
     checkAuthGate();
     restoreIntegrationSettings();
     updateAuthUI();
     loadServerHistory();
+    loadNamingTemplateFromServer();
+    // Show onboarding after a short delay so dashboard has rendered
+    setTimeout(showOnboarding, 500);
     </script>
 </body>
 </html>
