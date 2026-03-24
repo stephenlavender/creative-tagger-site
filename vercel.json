@@ -3,7 +3,8 @@
   "rewrites": [
     { "source": "/:path*", "has": [{ "type": "host", "value": "app.creativetagger.ai" }], "destination": "/app.html" },
     { "source": "/app", "destination": "/app.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/s/:token", "destination": "/shared.html" }
   ],
   "redirects": [
     { "source": "/:path*", "has": [{ "type": "host", "value": "www.creativetagger.ai" }], "destination": "https://creativetagger.ai/:path*", "permanent": true }

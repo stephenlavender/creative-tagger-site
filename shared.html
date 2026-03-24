@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Tagger — Shared Analysis</title>
+    <meta name="description" content="View a shared creative analysis with structured attributes and naming conventions.">
+    <meta property="og:title" content="Creative Tagger — Shared Analysis">
+    <meta property="og:description" content="Structured creative intelligence for any ad creative. See the full analysis.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+    <script>window.tailwindCSS={suppressWarning:true}</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0D0D0D', parchment: '#F8F6F1', cream: '#F0EBE3',
+                        dune: '#B8A98A', 'dune-light': '#D6CBBA', deep: '#1A1714',
+                        charcoal: '#2C2C2C', ash: '#6B6560', stone: '#BFBAB3', rule: '#D6D1CA',
+                    },
+                    fontFamily: {
+                        display: ['Instrument Serif', 'Georgia', 'serif'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+        .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B8A98A; font-family: 'DM Sans', sans-serif; }
+        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: #F0EBE3; border: 1px solid #D6D1CA; color: #0D0D0D; line-height: 1; }
+    </style>
+</head>
+<body class="bg-parchment text-obsidian antialiased font-sans min-h-screen">
+
+    <header class="border-b border-rule">
+        <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-baseline gap-1.5">
+                <a href="https://creativetagger.ai" class="font-display text-xl font-normal text-obsidian">Creative Tagger</a>
+                <a href="https://theboredroom.ai" target="_blank" class="text-[10px] font-sans font-medium text-stone tracking-wide hover:text-dune transition">by The Bored Room</a>
+            </div>
+            <a href="https://app.creativetagger.ai" class="bg-obsidian hover:bg-charcoal text-parchment text-sm font-medium px-4 py-2 rounded-lg transition">Try Free</a>
+        </div>
+    </header>
+
+    <!-- Loading -->
+    <div id="loading" class="max-w-4xl mx-auto px-6 py-20 text-center">
+        <div class="inline-block border-3 border-rule border-t-dune rounded-full w-10 h-10 animate-spin mb-4" style="border-width:3px;border-top-color:#B8A98A;animation:spin 0.8s linear infinite"></div>
+        <p class="text-ash text-sm">Loading shared analysis...</p>
+    </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+    <!-- Error -->
+    <div id="error" class="hidden max-w-4xl mx-auto px-6 py-20 text-center">
+        <h2 class="font-display text-3xl font-normal mb-3">Analysis not found</h2>
+        <p class="text-ash mb-6">This share link may have expired or been removed.</p>
+        <a href="https://creativetagger.ai" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-3 rounded-xl text-sm transition">Go to Creative Tagger</a>
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="hidden max-w-4xl mx-auto px-6 py-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <div class="eyebrow mb-1">Shared Analysis</div>
+                <h1 class="font-semibold text-xl" id="resTitle"></h1>
+                <div class="flex items-center gap-2 mt-1" id="resMeta"></div>
+            </div>
+            <a href="https://app.creativetagger.ai" class="text-xs text-dune hover:text-obsidian transition">Analyze your own creatives</a>
+        </div>
+        <div id="resBody" class="space-y-5"></div>
+        <div class="mt-8 text-center border-t border-rule pt-8 pb-4">
+            <p class="text-ash text-sm mb-4">Want to classify your own creatives?</p>
+            <a href="https://app.creativetagger.ai" class="inline-block bg-obsidian hover:bg-charcoal text-parchment font-semibold px-8 py-3 rounded-xl transition">Start Free</a>
+        </div>
+    </div>
+
+    <script>
+    const API = 'https://api.creativetagger.ai';
+
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function attrCell(label, value) {
+        if (!value) return '';
+        return `<div><div class="eyebrow mb-1">${label}</div><span class="tag">${escHtml(String(value))}</span></div>`;
+    }
+
+    function namingRow(label, value) {
+        return `<div class="flex items-center justify-between py-2 border-b border-rule last:border-0 group">
+            <div>
+                <span class="text-stone text-xs">${label}</span>
+                <div class="font-mono text-sm text-obsidian/80 mt-0.5">${escHtml(value)}</div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${value.replace(/'/g, "\\'")}').then(()=>{})" class="opacity-0 group-hover:opacity-100 text-stone hover:text-charcoal transition p-1 text-xs">Copy</button>
+        </div>`;
+    }
+
+    async function loadShared() {
+        const path = window.location.pathname;
+        const token = path.split('/').pop();
+        if (!token) { showError(); return; }
+
+        try {
+            const resp = await fetch(API + '/auth/shared/' + token);
+            if (!resp.ok) { showError(); return; }
+            const data = await resp.json();
+            renderResult(data);
+        } catch {
+            showError();
+        }
+    }
+
+    function showError() {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error').classList.remove('hidden');
+    }
+
+    function renderResult(data) {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('result').classList.remove('hidden');
+
+        const v = data.attributes || {};
+        const n = data.naming || {};
+
+        document.getElementById('resTitle').textContent = data.filename || 'Creative Analysis';
+        document.getElementById('resMeta').innerHTML = `
+            <span class="tag">${data.format || ''}</span>
+            ${v.aspect_ratio ? `<span class="text-stone text-xs">${v.aspect_ratio}</span>` : ''}
+            ${v.duration ? `<span class="text-stone text-xs">${v.duration}</span>` : ''}
+        `;
+
+        // Update OG title dynamically
+        document.title = `${data.filename || 'Analysis'} — Creative Tagger`;
+
+        let html = '';
+
+        // Naming
+        if (n.standard || n.compact) {
+            html += `<div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Naming Conventions</h3>
+                ${n.standard ? namingRow('Default', n.standard) : ''}
+                ${n.compact ? namingRow('Compact', n.compact) : ''}
+                ${n.custom ? namingRow('Custom', n.custom) : ''}
+            </div>`;
+        }
+
+        // Creative Strategy
+        html += `<div class="bg-cream border border-rule rounded-xl p-5">
+            <h3 class="eyebrow mb-3">Creative Strategy</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                ${attrCell('Hook Type', v.hook_type)}
+                ${attrCell('Messaging Angle', v.messaging_angle)}
+                ${attrCell('Visual Format', v.visual_format)}
+                ${attrCell('CTA', v.cta)}
+                ${attrCell('Emotion', v.emotion)}
+                ${attrCell('Offer', v.offer_type)}
+            </div>
+        </div>`;
+
+        // Production
+        html += `<div class="bg-cream border border-rule rounded-xl p-5">
+            <h3 class="eyebrow mb-3">Production & Visual</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                ${attrCell('Visual Style', v.visual_style)}
+                ${attrCell('Asset Type', v.asset_type)}
+                ${attrCell('Talent', v.talent)}
+                ${attrCell('Seasonality', v.seasonality)}
+            </div>
+        </div>`;
+
+        // Audio
+        if (v.audio_type) {
+            html += `<div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-3">Audio</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    ${attrCell('Type', v.audio_type)}
+                    ${v.voiceover_tone ? attrCell('VO Tone', v.voiceover_tone) : ''}
+                </div>
+            </div>`;
+        }
+
+        // Transcript
+        if (data.transcript) {
+            html += `<div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-2">Transcript</h3>
+                <p class="text-sm text-ash leading-relaxed">${escHtml(data.transcript.full_text)}</p>
+            </div>`;
+        }
+
+        // Text overlay
+        if (v.text_overlay_content) {
+            html += `<div class="bg-cream border border-rule rounded-xl p-5">
+                <h3 class="eyebrow mb-2">Text on Creative</h3>
+                <p class="text-sm text-charcoal leading-relaxed">${escHtml(v.text_overlay_content)}</p>
+            </div>`;
+        }
+
+        document.getElementById('resBody').innerHTML = html;
+    }
+
+    loadShared();
+    </script>
+</body>
+</html>
