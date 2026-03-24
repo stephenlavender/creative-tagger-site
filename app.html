@@ -433,7 +433,11 @@
     <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-start justify-center pt-16 bg-obsidian/40 backdrop-blur-sm overflow-y-auto" onclick="if(event.target===this)closeDetail()">
         <div class="bg-parchment border border-rule rounded-2xl w-full max-w-3xl mb-16 shadow-lg">
             <div class="flex items-center justify-between p-5 border-b border-rule">
-                <h2 class="font-semibold text-lg" id="detailTitle">Creative Detail</h2>
+                <div class="flex items-center gap-3">
+                    <button onclick="viewPrevDetail()" id="detailPrev" class="text-stone hover:text-obsidian transition text-sm px-2 py-1 rounded hover:bg-cream disabled:opacity-30 disabled:cursor-default" title="Previous">&larr;</button>
+                    <h2 class="font-semibold text-lg" id="detailTitle">Creative Detail</h2>
+                    <button onclick="viewNextDetail()" id="detailNext" class="text-stone hover:text-obsidian transition text-sm px-2 py-1 rounded hover:bg-cream disabled:opacity-30 disabled:cursor-default" title="Next">&rarr;</button>
+                </div>
                 <button onclick="closeDetail()" class="text-stone hover:text-obsidian transition text-lg">&times;</button>
             </div>
             <div id="detailBody" class="p-5"></div>
@@ -584,12 +588,16 @@
     // --- Background Processing Queue ---
     const QUEUE = { items: [], active: 0, maxConcurrent: 3 };
 
-    function queueAnalysis(file) {
+    function queueAnalysis(fileOrUrl, isUrl = false) {
         const id = Date.now() + Math.random();
-        const item = { id, file, filename: file.name, status: 'queued', result: null, thumb: null };
-        // Generate thumbnail
-        generateThumb(file).then(thumb => { item.thumb = thumb; });
-        QUEUE.items.unshift(item);
+        if (isUrl) {
+            const item = { id, file: null, url: fileOrUrl, filename: fileOrUrl, status: 'queued', result: null, thumb: null, isUrl: true };
+            QUEUE.items.unshift(item);
+        } else {
+            const item = { id, file: fileOrUrl, filename: fileOrUrl.name, status: 'queued', result: null, thumb: null };
+            generateThumb(fileOrUrl).then(thumb => { item.thumb = thumb; });
+            QUEUE.items.unshift(item);
+        }
         document.getElementById('analyzeEmpty').classList.add('hidden');
         renderSidebar();
         processQueue();
@@ -649,8 +657,14 @@
         renderSidebar();
 
         const formData = new FormData();
-        formData.append('file', next.file);
         formData.append('brand_name', getBrand());
+        if (next.isUrl) {
+            const url = next.url;
+            const isLandingPage = url.startsWith('http') && !url.match(/\.(mp4|mov|avi|jpg|jpeg|png|webp|gif)(\?|$)/i);
+            formData.append(isLandingPage ? 'page_url' : 'file_url', url);
+        } else {
+            formData.append('file', next.file);
+        }
 
         try {
             const data = await callApi('/analyze', formData);
@@ -761,33 +775,11 @@
     }
 
     // --- URL Analysis ---
-    async function analyzeUrl() {
+    function analyzeUrl() {
         const url = document.getElementById('urlInput').value.trim();
         if (!url) return;
-
-        const isLandingPage = url.startsWith('http') && !url.match(/\.(mp4|mov|avi|jpg|jpeg|png|webp|gif)(\?|$)/i);
-        showLoading('Analyzing URL...');
-
-        const formData = new FormData();
-        formData.append('brand_name', getBrand());
-
-        if (isLandingPage) {
-            formData.append('page_url', url);
-        } else {
-            formData.append('file_url', url);
-        }
-
-        try {
-            const data = await callApi('/analyze', formData);
-            hideLoading();
-            STATE.results = [{ filename: url, ...data }];
-            renderSingleResult(data, url);
-            addToHistory(data, url);
-            document.getElementById('urlInput').value = '';
-        } catch (err) {
-            hideLoading();
-            showToast('Analysis failed: ' + err.message, 'error');
-        }
+        queueAnalysis(url, true);
+        document.getElementById('urlInput').value = '';
     }
 
     // Batch analysis now handled by the queue — all files processed in background
@@ -1592,9 +1584,28 @@
     // --- Library ---
     let LIB_DATA = [];
     let _searchTimer = null;
+    let _sortCol = null;
+    let _sortAsc = true;
+
     function debouncedLibrarySearch() {
         clearTimeout(_searchTimer);
         _searchTimer = setTimeout(loadLibrary, 300);
+    }
+
+    function sortLibrary(key) {
+        if (_sortCol === key) { _sortAsc = !_sortAsc; }
+        else { _sortCol = key; _sortAsc = true; }
+        LIB_DATA.sort((a, b) => {
+            const va = (a[key] || '').toString().toLowerCase();
+            const vb = (b[key] || '').toString().toLowerCase();
+            return _sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+        });
+        renderLibraryTable();
+    }
+
+    function sortArrow(key) {
+        if (_sortCol !== key) return '';
+        return _sortAsc ? ' &#9650;' : ' &#9660;';
     }
 
     const DROPDOWN_OPTIONS = {
@@ -1878,6 +1889,69 @@
         ).join('');
     }
 
+    // Dropdown-eligible fields map
+    const DROPDOWN_MAP = {
+        hook_type: 'hook_type', asset_type: 'asset_type',
+        visual_format: 'creative_type', visual_style: 'visual_style',
+        cta: 'cta_type', emotion: 'emotion', talent: 'talent',
+        offer_type: 'offer_type', audio_type: 'audio_type',
+        seasonality: 'seasonality', messaging_angle: 'messaging_angle',
+    };
+
+    // Ensure all dropdown options are initialized
+    function initDropdownOptions() {
+        if (!DROPDOWN_OPTIONS['asset_type']) DROPDOWN_OPTIONS['asset_type'] = ['UGC','Lifestyle','Product Shot','Studio','High Production','Screen Recording','Stock','AI Generated','Animation','Mixed Media'];
+        if (!DROPDOWN_OPTIONS['talent']) DROPDOWN_OPTIONS['talent'] = ['No Talent','Creator','Model','Founder','Customer','Voiceover Only','Hands Only','Employee','Expert','Influencer'];
+        if (!DROPDOWN_OPTIONS['offer_type']) DROPDOWN_OPTIONS['offer_type'] = ['No Offer','Percent Off','Dollar Off','Free Shipping','BOGO','Bundle','Free Gift','Subscribe Save','Limited Time','Clearance'];
+        if (!DROPDOWN_OPTIONS['audio_type']) DROPDOWN_OPTIONS['audio_type'] = ['Voiceover + Music','Voiceover Only','Music Only','Trending Sound','Native Audio','Silent'];
+        if (!DROPDOWN_OPTIONS['seasonality']) DROPDOWN_OPTIONS['seasonality'] = ['Evergreen','Black Friday','Cyber Monday','Holiday','New Year','Valentines','Mothers Day','Fathers Day','Back To School','Summer','Spring','Fall','Prime Day','Launch','Flash Sale'];
+    }
+
+    function renderLibraryTable() {
+        initDropdownOptions();
+        const template = getNamingTemplate();
+        const head = document.getElementById('libraryTableHead');
+        const tbody = document.getElementById('libraryTableBody');
+
+        head.innerHTML = `<th class="pb-2 pr-1 w-6"><input type="checkbox" onchange="toggleSelectAll(this.checked)" class="accent-dune cursor-pointer"></th>` + template.map(key => {
+            const f = NAMING_FIELDS[key];
+            const label = f ? f.label : key;
+            return `<th class="pb-2 pr-2 font-medium text-ash text-xs cursor-pointer hover:text-obsidian select-none" onclick="sortLibrary('${key}')">${label}${sortArrow(key)}</th>`;
+        }).join('') + `<th class="pb-2 pr-2 font-medium text-ash text-xs cursor-pointer hover:text-obsidian select-none" onclick="sortLibrary('created_at')">Date${sortArrow('created_at')}</th><th class="pb-2 font-medium text-ash text-xs">Ad Name</th><th></th>`;
+
+        tbody.innerHTML = LIB_DATA.map((item, idx) => {
+            const cells = template.map((key, col) => {
+                const val = item[key] || '';
+                const dKey = DROPDOWN_MAP[key];
+                const clickHandler = `onclick="cellClick(event,${idx},${col},'${key}')"`;
+
+                if (dKey && DROPDOWN_OPTIONS[dKey]) {
+                    return `<td ${clickHandler}>${makeDropdown(dKey, val, idx, key, col)}</td>`;
+                }
+
+                return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
+            }).join('');
+
+            return `<tr class="border-b border-rule/50 hover:bg-cream/50" data-lib-idx="${idx}">
+                <td class="py-2 pr-1 w-6"><input type="checkbox" class="lib-row-check accent-dune cursor-pointer" data-idx="${idx}" onchange="updateBulkBar()"></td>
+                ${cells}
+                <td class="py-2 pr-2 text-[10px] text-stone whitespace-nowrap">${formatDate(item.created_at)}</td>
+                <td class="py-2">
+                    <div class="flex items-center gap-1">
+                        <span id="lib-adname-${idx}" class="font-mono text-[10px] text-charcoal truncate max-w-[180px] cursor-pointer hover:text-obsidian" onclick="copyText(this.textContent)">${buildAdName(item)}</span>
+                        <button onclick="copyText(document.getElementById('lib-adname-${idx}').textContent)" class="text-stone hover:text-charcoal flex-shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </button>
+                    </div>
+                </td>
+                <td class="py-2 pl-1 whitespace-nowrap">
+                    <button onclick="viewLibraryItem(${item.id})" class="text-dune hover:text-obsidian text-[10px]">View</button>
+                    <button onclick="deleteLibraryItem(${item.id},this)" class="text-stone hover:text-red-500 text-[10px] ml-1" title="Delete">&#10005;</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
     async function loadLibrary() {
         const key = getApiKey();
         if (!key) return;
@@ -1891,87 +1965,72 @@
         try {
             const resp = await fetch(url);
             const data = await resp.json();
-            const tbody = document.getElementById('libraryTableBody');
             const empty = document.getElementById('libraryEmpty');
             document.getElementById('libraryCount').textContent = `${data.total} creatives`;
 
             if (!data.items.length) {
                 document.getElementById('libraryTableHead').innerHTML = '';
-                tbody.innerHTML = '';
+                document.getElementById('libraryTableBody').innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
             empty.classList.add('hidden');
             LIB_DATA = data.items;
-
-            // Dynamic columns from naming template
-            const template = getNamingTemplate();
-            const head = document.getElementById('libraryTableHead');
-            head.innerHTML = template.map(key => {
-                const f = NAMING_FIELDS[key];
-                return `<th class="pb-2 pr-2 font-medium text-ash text-xs">${f ? f.label : key}</th>`;
-            }).join('') + `<th class="pb-2 pr-2 font-medium text-ash text-xs">Date</th><th class="pb-2 font-medium text-ash text-xs">Ad Name</th><th></th>`;
-
-            // Dropdown-eligible fields
-            // Map template keys to dropdown option keys
-            const dropdownMap = {
-                hook_type: 'hook_type', asset_type: 'asset_type',
-                visual_format: 'creative_type', visual_style: 'visual_style',
-                cta: 'cta_type', emotion: 'emotion', talent: 'talent',
-                offer_type: 'offer_type', audio_type: 'audio_type',
-                seasonality: 'seasonality', messaging_angle: 'messaging_angle',
-            };
-
-            // Add dropdown options for fields that don't have them yet
-            if (!DROPDOWN_OPTIONS['asset_type']) {
-                DROPDOWN_OPTIONS['asset_type'] = ['UGC','Lifestyle','Product Shot','Studio','High Production','Screen Recording','Stock','AI Generated','Animation','Mixed Media'];
-            }
-            if (!DROPDOWN_OPTIONS['talent']) {
-                DROPDOWN_OPTIONS['talent'] = ['No Talent','Creator','Model','Founder','Customer','Voiceover Only','Hands Only','Employee','Expert','Influencer'];
-            }
-            if (!DROPDOWN_OPTIONS['offer_type']) {
-                DROPDOWN_OPTIONS['offer_type'] = ['No Offer','Percent Off','Dollar Off','Free Shipping','BOGO','Bundle','Free Gift','Subscribe Save','Limited Time','Clearance'];
-            }
-            if (!DROPDOWN_OPTIONS['audio_type']) {
-                DROPDOWN_OPTIONS['audio_type'] = ['Voiceover + Music','Voiceover Only','Music Only','Trending Sound','Native Audio','Silent'];
-            }
-            if (!DROPDOWN_OPTIONS['seasonality']) {
-                DROPDOWN_OPTIONS['seasonality'] = ['Evergreen','Black Friday','Cyber Monday','Holiday','New Year','Valentines','Mothers Day','Fathers Day','Back To School','Summer','Spring','Fall','Prime Day','Launch','Flash Sale'];
-            }
-
-            tbody.innerHTML = data.items.map((item, idx) => {
-                const cells = template.map((key, col) => {
-                    const val = item[key] || '';
-                    const dKey = dropdownMap[key];
-                    const clickHandler = `onclick="cellClick(event,${idx},${col},'${key}')"`;
-
-                    if (dKey && DROPDOWN_OPTIONS[dKey]) {
-                        return `<td ${clickHandler}>${makeDropdown(dKey, val, idx, key, col)}</td>`;
-                    }
-
-                    return `<td ${clickHandler}><input type="text" value="${escAttr(val)}" oninput="updateLibField(${idx},'${key}',this.value,${col})" class="bg-transparent text-xs text-obsidian w-full max-w-[120px]"></td>`;
-                }).join('');
-
-                return `<tr class="border-b border-rule/50 hover:bg-cream/50">
-                    ${cells}
-                    <td class="py-2 pr-2 text-[10px] text-stone whitespace-nowrap">${formatDate(item.created_at)}</td>
-                    <td class="py-2">
-                        <div class="flex items-center gap-1">
-                            <span id="lib-adname-${idx}" class="font-mono text-[10px] text-charcoal truncate max-w-[180px] cursor-pointer hover:text-obsidian" onclick="copyText(this.textContent)">${buildAdName(item)}</span>
-                            <button onclick="copyText(document.getElementById('lib-adname-${idx}').textContent)" class="text-stone hover:text-charcoal flex-shrink-0">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                            </button>
-                        </div>
-                    </td>
-                    <td class="py-2 pl-1 whitespace-nowrap">
-                        <button onclick="viewLibraryItem(${item.id})" class="text-dune hover:text-obsidian text-[10px]">View</button>
-                        <button onclick="deleteLibraryItem(${item.id},this)" class="text-stone hover:text-red-500 text-[10px] ml-1" title="Delete">&#10005;</button>
-                    </td>
-                </tr>`;
-            }).join('');
+            _sortCol = null;
+            renderLibraryTable();
         } catch (e) {
             console.error('Library load failed:', e);
         }
+    }
+
+    function toggleSelectAll(checked) {
+        document.querySelectorAll('.lib-row-check').forEach(cb => cb.checked = checked);
+        updateBulkBar();
+    }
+
+    function getSelectedIndices() {
+        return [...document.querySelectorAll('.lib-row-check:checked')].map(cb => parseInt(cb.dataset.idx));
+    }
+
+    function updateBulkBar() {
+        const count = document.querySelectorAll('.lib-row-check:checked').length;
+        let bar = document.getElementById('bulkBar');
+        if (count > 0) {
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'bulkBar';
+                bar.className = 'flex items-center gap-3 bg-cream border border-rule rounded-lg px-4 py-2 mb-3';
+                document.getElementById('libraryTable').parentNode.insertBefore(bar, document.getElementById('libraryTable'));
+            }
+            bar.innerHTML = `<span class="text-xs text-ash">${count} selected</span>
+                <button onclick="bulkCopyNames()" class="text-xs text-dune hover:text-obsidian transition">Copy Names</button>
+                <button onclick="bulkDelete()" class="text-xs text-stone hover:text-red-500 transition">Delete</button>
+                <button onclick="toggleSelectAll(false)" class="text-xs text-stone hover:text-obsidian transition ml-auto">Clear</button>`;
+        } else if (bar) {
+            bar.remove();
+        }
+    }
+
+    function bulkCopyNames() {
+        const indices = getSelectedIndices();
+        const names = indices.map(i => buildAdName(LIB_DATA[i])).join('\n');
+        copyText(names);
+    }
+
+    async function bulkDelete() {
+        const indices = getSelectedIndices();
+        if (!indices.length) return;
+        if (!confirm(`Delete ${indices.length} creative(s)?`)) return;
+        const key = getApiKey();
+        let deleted = 0;
+        for (const idx of indices) {
+            try {
+                const resp = await fetch(getEndpoint() + `/auth/library/${LIB_DATA[idx].id}?api_key=${key}`, { method: 'DELETE' });
+                if (resp.ok) deleted++;
+            } catch {}
+        }
+        showToast(`Deleted ${deleted} creative(s)`);
+        loadLibrary();
     }
 
     function copyAllLibraryNames() {
@@ -2009,8 +2068,11 @@
         }
     }
 
+    let _detailIdx = -1;
+
     async function viewLibraryItem(id) {
         const key = getApiKey();
+        _detailIdx = LIB_DATA.findIndex(i => i.id === id);
         try {
             const resp = await fetch(getEndpoint() + `/auth/library/${id}?api_key=${key}`);
             const data = await resp.json();
@@ -2018,6 +2080,18 @@
         } catch (e) {
             showToast('Failed to load', 'error');
         }
+    }
+
+    function viewPrevDetail() {
+        if (_detailIdx <= 0 || !LIB_DATA.length) return;
+        _detailIdx--;
+        viewLibraryItem(LIB_DATA[_detailIdx].id);
+    }
+
+    function viewNextDetail() {
+        if (_detailIdx >= LIB_DATA.length - 1 || !LIB_DATA.length) return;
+        _detailIdx++;
+        viewLibraryItem(LIB_DATA[_detailIdx].id);
     }
 
     function showDetailModal(data) {
@@ -2108,6 +2182,12 @@
 
             <div class="text-xs text-stone text-right">${data.processing_time_ms || 0}ms &middot; ${data.model_used || ''} &middot; ${data.format || ''}</div>
         </div>`;
+
+        // Update prev/next button states
+        const prevBtn = document.getElementById('detailPrev');
+        const nextBtn = document.getElementById('detailNext');
+        prevBtn.disabled = _detailIdx <= 0;
+        nextBtn.disabled = _detailIdx >= LIB_DATA.length - 1;
 
         document.getElementById('detailModal').classList.remove('hidden');
     }
@@ -2296,6 +2376,10 @@
             closeDetail();
             return;
         }
+        // Arrow keys for detail modal navigation
+        const detailOpen = !document.getElementById('detailModal').classList.contains('hidden');
+        if (detailOpen && e.key === 'ArrowLeft') { viewPrevDetail(); return; }
+        if (detailOpen && e.key === 'ArrowRight') { viewNextDetail(); return; }
         if (e.key !== 'Enter') return;
         if (document.getElementById('gateEmail') === document.activeElement ||
             document.getElementById('gatePassword') === document.activeElement) doGateSignup();
