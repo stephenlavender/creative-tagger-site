@@ -161,11 +161,13 @@
 
     // Auto-login if user has an API key from the main dashboard
     (function autoLogin() {
-        const stored = localStorage.getItem('ct_api_key');
-        if (stored) {
-            API_KEY = stored;
-            loadDashboard();
-        }
+        try {
+            const settings = JSON.parse(localStorage.getItem('ct_settings') || '{}');
+            if (settings.apiKey) {
+                API_KEY = settings.apiKey;
+                loadDashboard();
+            }
+        } catch {}
     })();
 
     async function loadDashboard() {
