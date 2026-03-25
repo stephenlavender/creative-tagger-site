@@ -26,13 +26,15 @@
         </div>
     </header>
 
-    <!-- Token Input -->
+    <!-- Auth Gate -->
     <div id="tokenGate" class="max-w-md mx-auto mt-20 text-center">
         <h2 class="font-display text-2xl mb-4">Admin Dashboard</h2>
+        <p class="text-ash text-sm mb-4">Sign in with your admin account</p>
         <div class="flex gap-2">
-            <input type="password" id="adminToken" placeholder="Admin token" class="flex-1 bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+            <input type="password" id="adminToken" placeholder="API key or admin token" class="flex-1 bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
             <button onclick="loadDashboard()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-5 py-2.5 rounded-lg text-sm transition">Enter</button>
         </div>
+        <p class="text-stone text-xs mt-3">Uses the same API key from your dashboard account</p>
     </div>
 
     <!-- Dashboard -->
@@ -50,6 +52,16 @@
             <div class="stat-card">
                 <div class="stat-value" id="statRevenue">-</div>
                 <div class="stat-label">Revenue (this month)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statCost">-</div>
+                <div class="stat-label">AI Cost (this month)</div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card">
+                <div class="stat-value" id="statMargin">-</div>
+                <div class="stat-label">Margin (this month)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="statActive">-</div>
@@ -144,11 +156,29 @@
 
     <script>
     const API = 'https://api.creativetagger.ai';
-    let TOKEN = '';
+    let API_KEY = '';
+    let LEGACY_TOKEN = '';
+
+    // Auto-login if user has an API key from the main dashboard
+    (function autoLogin() {
+        const stored = localStorage.getItem('ct_api_key');
+        if (stored) {
+            API_KEY = stored;
+            loadDashboard();
+        }
+    })();
 
     async function loadDashboard() {
-        TOKEN = document.getElementById('adminToken').value.trim();
-        if (!TOKEN) return;
+        // Use input field if provided, otherwise use stored key
+        const input = document.getElementById('adminToken').value.trim();
+        if (input) {
+            if (input.startsWith('ct_')) {
+                API_KEY = input;
+            } else {
+                LEGACY_TOKEN = input;
+            }
+        }
+        if (!API_KEY && !LEGACY_TOKEN) return;
 
         try {
             const [stats, users, recent] = await Promise.all([
@@ -164,6 +194,8 @@
             document.getElementById('statUsers').textContent = stats.users.total;
             document.getElementById('statAnalyses').textContent = stats.analyses.total;
             document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
+            document.getElementById('statCost').textContent = '$' + (stats.cost ? stats.cost.this_month_dollars : 0);
+            document.getElementById('statMargin').textContent = '$' + (stats.margin ? stats.margin.this_month_dollars : 0);
             document.getElementById('statActive').textContent = stats.users.active_7d;
             document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
             document.getElementById('statSignupsWeek').textContent = stats.users.signups_7d;
@@ -230,8 +262,14 @@
     }
 
     async function fetchAdmin(path) {
-        const sep = path.includes('?') ? '&' : '?';
-        const resp = await fetch(API + path + sep + 'token=' + TOKEN);
+        const opts = { headers: {} };
+        if (API_KEY) {
+            opts.headers['X-API-Key'] = API_KEY;
+        } else if (LEGACY_TOKEN) {
+            const sep = path.includes('?') ? '&' : '?';
+            path = path + sep + 'token=' + LEGACY_TOKEN;
+        }
+        const resp = await fetch(API + path, opts);
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
             throw new Error(err.detail || resp.statusText);
@@ -297,6 +335,8 @@
                 document.getElementById('statUsers').textContent = stats.users.total;
                 document.getElementById('statAnalyses').textContent = stats.analyses.total;
                 document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
+                document.getElementById('statCost').textContent = '$' + (stats.cost ? stats.cost.this_month_dollars : 0);
+                document.getElementById('statMargin').textContent = '$' + (stats.margin ? stats.margin.this_month_dollars : 0);
                 document.getElementById('statActive').textContent = stats.users.active_7d;
                 document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
                 document.getElementById('statAnalysesToday').textContent = stats.analyses.today;
