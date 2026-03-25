@@ -50,18 +50,8 @@
                 <div class="stat-label">Total Analyses</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="statRevenue">-</div>
-                <div class="stat-label">Revenue (this month)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statCost">-</div>
-                <div class="stat-label">AI Cost (this month)</div>
-            </div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="stat-card">
-                <div class="stat-value" id="statMargin">-</div>
-                <div class="stat-label">Margin (this month)</div>
+                <div class="stat-value" id="statMRR">-</div>
+                <div class="stat-label">MRR</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="statActive">-</div>
@@ -82,6 +72,14 @@
             <div class="stat-card">
                 <div class="text-2xl font-semibold" id="statAnalysesToday">-</div>
                 <div class="stat-label">Analyses Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statAICost">-</div>
+                <div class="stat-label">AI Cost (this month)</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-2xl font-semibold" id="statBillable">-</div>
+                <div class="stat-label">Billable Value (this month)</div>
             </div>
             <div class="stat-card">
                 <div class="text-2xl font-semibold" id="statActive30">-</div>
@@ -195,13 +193,13 @@
             // Stats
             document.getElementById('statUsers').textContent = stats.users.total;
             document.getElementById('statAnalyses').textContent = stats.analyses.total;
-            document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
-            document.getElementById('statCost').textContent = '$' + (stats.cost ? stats.cost.this_month_dollars : 0);
-            document.getElementById('statMargin').textContent = '$' + (stats.margin ? stats.margin.this_month_dollars : 0);
+            document.getElementById('statMRR').textContent = '$' + (stats.revenue ? stats.revenue.mrr_dollars : 0);
             document.getElementById('statActive').textContent = stats.users.active_7d;
             document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
             document.getElementById('statSignupsWeek').textContent = stats.users.signups_7d;
             document.getElementById('statAnalysesToday').textContent = stats.analyses.today;
+            document.getElementById('statAICost').textContent = '$' + (stats.ai_cost ? stats.ai_cost.this_month_dollars : 0);
+            document.getElementById('statBillable').textContent = '$' + (stats.billable_value ? stats.billable_value.this_month_dollars : 0);
             document.getElementById('statActive30').textContent = stats.users.active_30d;
 
             // Format breakdown
@@ -336,12 +334,12 @@
                 const stats = await fetchAdmin('/admin/stats');
                 document.getElementById('statUsers').textContent = stats.users.total;
                 document.getElementById('statAnalyses').textContent = stats.analyses.total;
-                document.getElementById('statRevenue').textContent = '$' + stats.revenue.this_month_dollars;
-                document.getElementById('statCost').textContent = '$' + (stats.cost ? stats.cost.this_month_dollars : 0);
-                document.getElementById('statMargin').textContent = '$' + (stats.margin ? stats.margin.this_month_dollars : 0);
+                document.getElementById('statMRR').textContent = '$' + (stats.revenue ? stats.revenue.mrr_dollars : 0);
                 document.getElementById('statActive').textContent = stats.users.active_7d;
                 document.getElementById('statSignupsToday').textContent = stats.users.signups_today;
                 document.getElementById('statAnalysesToday').textContent = stats.analyses.today;
+                document.getElementById('statAICost').textContent = '$' + (stats.ai_cost ? stats.ai_cost.this_month_dollars : 0);
+                document.getElementById('statBillable').textContent = '$' + (stats.billable_value ? stats.billable_value.this_month_dollars : 0);
             } catch {}
         }, 60000);
     }
