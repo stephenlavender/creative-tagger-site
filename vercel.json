@@ -3,6 +3,7 @@
   "outputDirectory": ".",
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/admin", "has": [{ "type": "host", "value": "app.creativetagger.ai" }], "destination": "/admin.html" },
     { "source": "/:path*", "has": [{ "type": "host", "value": "app.creativetagger.ai" }], "destination": "/app.html" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/admin", "destination": "/admin.html" },
