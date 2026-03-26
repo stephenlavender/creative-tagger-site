@@ -158,14 +158,24 @@
     let LEGACY_TOKEN = '';
 
     // Auto-login if user has an API key from the main dashboard
-    (function autoLogin() {
+    (async function autoLogin() {
         try {
             const settings = JSON.parse(localStorage.getItem('ct_settings') || '{}');
             if (settings.apiKey) {
                 API_KEY = settings.apiKey;
-                loadDashboard();
+                document.getElementById('tokenGate').innerHTML = '<p class="text-stone text-sm">Loading admin dashboard...</p>';
+                await loadDashboard();
             }
-        } catch {}
+        } catch (e) {
+            // Auto-login failed — show the gate with error info
+            document.getElementById('tokenGate').innerHTML = `
+                <h2 class="font-display text-2xl mb-4">Admin Dashboard</h2>
+                <p class="text-red-500 text-sm mb-4">${e.message || 'Not an admin account'}</p>
+                <div class="flex gap-2">
+                    <input type="password" id="adminToken" placeholder="Admin API key (ct_...)" class="flex-1 bg-cream border border-rule rounded-lg px-3 py-2.5 text-sm text-obsidian placeholder-stone focus:outline-none focus:border-dune transition">
+                    <button onclick="loadDashboard()" class="bg-obsidian hover:bg-charcoal text-parchment font-medium px-5 py-2.5 rounded-lg text-sm transition">Enter</button>
+                </div>`;
+        }
     })();
 
     async function loadDashboard() {
