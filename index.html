@@ -274,65 +274,117 @@
         <div class="max-w-5xl mx-auto">
             <div class="text-center mb-16">
                 <h2 class="font-display text-4xl md:text-5xl font-normal mb-4">Simple pricing</h2>
-                <p class="text-ash text-lg">Free API for agents and developers. Dashboard plans for teams.</p>
+                <p class="text-ash text-lg">Free to start. Pay as you go. Dashboard included on Starter+.</p>
             </div>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-cream border border-rule rounded-2xl p-8">
-                    <div class="eyebrow mb-2">API — Free</div>
+            <!-- API Tiers -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="bg-cream border border-rule rounded-2xl p-7">
+                    <div class="eyebrow mb-2">Free</div>
                     <div class="text-4xl font-bold font-display mb-1">$0</div>
-                    <div class="text-stone text-sm mb-6">25 calls/month, then PAYG</div>
-                    <ul class="space-y-3 text-sm text-ash mb-8">
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> All 6 formats, every dimension</li>
+                    <div class="text-stone text-sm mb-5">50 analyses/month</div>
+                    <ul class="space-y-2.5 text-sm text-ash mb-7">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> All 6 formats</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> No credit card required</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> MCP server + Python SDK</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> 100MB upload limit (URL unlimited)</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.05–$0.25/call after free tier</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> API access only</li>
                     </ul>
-                    <a href="https://app.creativetagger.ai" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-6 py-3 rounded-xl transition text-sm">
-                        Sign Up Free
+                    <a href="https://app.creativetagger.ai" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-5 py-2.5 rounded-xl transition text-sm">
+                        Start Free
                     </a>
                 </div>
-                <div class="bg-cream border-2 border-dune rounded-2xl p-8 relative">
+                <div class="bg-cream border border-rule rounded-2xl p-7">
+                    <div class="eyebrow mb-2">Pay As You Go</div>
+                    <div class="text-4xl font-bold font-display mb-1">$0.06<span class="text-lg text-stone font-normal font-sans">/call</span></div>
+                    <div class="text-stone text-sm mb-5">No subscription, billed monthly</div>
+                    <ul class="space-y-2.5 text-sm text-ash mb-7">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Pay only for what you use</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Auto-billed, no interruptions</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Spending limit controls</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> API access only</li>
+                    </ul>
+                    <a href="https://app.creativetagger.ai" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-5 py-2.5 rounded-xl transition text-sm">
+                        Add Payment
+                    </a>
+                </div>
+                <div class="bg-cream border-2 border-dune rounded-2xl p-7 relative">
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-obsidian text-parchment text-xs font-medium px-3 py-1 rounded-full">Most Popular</div>
-                    <div class="eyebrow mb-2">Dashboard — Pro</div>
+                    <div class="eyebrow mb-2">Starter</div>
                     <div class="text-4xl font-bold font-display mb-1">$49<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
-                    <div class="text-stone text-sm mb-6">1,000 analyses included</div>
-                    <ul class="space-y-3 text-sm text-ash mb-8">
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Everything in Free</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.05/analysis overage</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Trending audio detection</li>
+                    <div class="text-stone text-sm mb-5">1,000 analyses included</div>
+                    <ul class="space-y-2.5 text-sm text-ash mb-7">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> API + Dashboard access</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.06/call overage</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> 500MB upload limit</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Priority processing</li>
                     </ul>
-                    <a href="https://app.creativetagger.ai" class="block text-center bg-obsidian hover:bg-charcoal text-parchment font-medium px-6 py-3 rounded-xl transition text-sm">
-                        Start Pro
+                    <a href="https://app.creativetagger.ai" class="block text-center bg-obsidian hover:bg-charcoal text-parchment font-medium px-5 py-2.5 rounded-xl transition text-sm">
+                        Start Starter
                     </a>
                 </div>
-                <div class="bg-cream border border-rule rounded-2xl p-8">
-                    <div class="eyebrow mb-2">Dashboard — Scale</div>
-                    <div class="text-4xl font-bold font-display mb-1">$199<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
-                    <div class="text-stone text-sm mb-6">10,000 analyses included</div>
-                    <ul class="space-y-3 text-sm text-ash mb-8">
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Everything in Pro</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.02/analysis overage</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Vertical taxonomy packs</li>
+                <div class="bg-cream border border-rule rounded-2xl p-7">
+                    <div class="eyebrow mb-2">Growth</div>
+                    <div class="text-4xl font-bold font-display mb-1">$149<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
+                    <div class="text-stone text-sm mb-5">5,000 analyses included</div>
+                    <ul class="space-y-2.5 text-sm text-ash mb-7">
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> API + Dashboard access</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> $0.05/call overage</li>
                         <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> 500MB upload limit</li>
-                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Dedicated support</li>
+                        <li class="flex items-center gap-2"><span class="text-dune">&#10003;</span> Priority processing</li>
                     </ul>
-                    <a href="mailto:hello@creativetagger.ai" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-6 py-3 rounded-xl transition text-sm">
-                        Talk to Us
+                    <a href="https://app.creativetagger.ai" class="block text-center bg-parchment hover:bg-dune-light border border-rule text-obsidian font-medium px-5 py-2.5 rounded-xl transition text-sm">
+                        Start Growth
                     </a>
                 </div>
             </div>
-            <div class="mt-12 text-center">
-                <div class="eyebrow mb-4">Per-analysis rates</div>
+            <!-- Scale + Enterprise -->
+            <div class="grid md:grid-cols-2 gap-5 mt-5">
+                <div class="bg-cream border border-rule rounded-2xl p-7">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="eyebrow mb-1">Scale</div>
+                            <div class="text-3xl font-bold font-display">$499<span class="text-lg text-stone font-normal font-sans">/mo</span></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-ash">25,000 analyses included</div>
+                            <div class="text-sm text-ash">$0.04/call overage</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-sm text-ash">
+                        <span class="tag-pill">API + Dashboard</span>
+                        <span class="tag-pill">500MB uploads</span>
+                        <span class="tag-pill">Priority processing</span>
+                        <span class="tag-pill">Dedicated support</span>
+                    </div>
+                </div>
+                <div class="bg-cream border border-rule rounded-2xl p-7">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="eyebrow mb-1">Enterprise</div>
+                            <div class="text-3xl font-bold font-display">Custom</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-ash">Custom volume + pricing</div>
+                            <div class="text-sm text-ash">Custom taxonomy packs</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-sm text-ash mb-4">
+                        <span class="tag-pill">Everything in Scale</span>
+                        <span class="tag-pill">SLA</span>
+                        <span class="tag-pill">Custom integrations</span>
+                        <span class="tag-pill">Dedicated account manager</span>
+                    </div>
+                    <a href="mailto:hello@creativetagger.ai" class="inline-block text-sm text-dune hover:text-obsidian transition">Contact us &rarr;</a>
+                </div>
+            </div>
+            <div class="mt-10 text-center">
+                <div class="eyebrow mb-3">Credit costs</div>
                 <div class="flex flex-wrap justify-center gap-3 text-sm">
-                    <span class="tag-pill">Image $0.05</span>
-                    <span class="tag-pill">Email $0.05</span>
-                    <span class="tag-pill">Video $0.10</span>
-                    <span class="tag-pill">Landing Page $0.10</span>
-                    <span class="tag-pill">Carousel $0.10</span>
-                    <span class="tag-pill">Long Video $0.25</span>
+                    <span class="tag-pill">Image = 1 credit</span>
+                    <span class="tag-pill">Email = 1 credit</span>
+                    <span class="tag-pill">Carousel = 1 credit</span>
+                    <span class="tag-pill">Landing Page = 1 credit</span>
+                    <span class="tag-pill">Video = 2 credits</span>
+                    <span class="tag-pill">Long Video = 4 credits</span>
                 </div>
             </div>
         </div>
